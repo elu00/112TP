@@ -201,10 +201,10 @@ def main(path_to_dumped_textures = '../demo/dumped_textures', path_to_actual_tex
     cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
         
 
-        # if you want to use white noise instead uncomment the below line:
-        #input_img = torch.randn(content_img.data.size(), device=device)
-        assert style_img.size() == content_img.size(), \
-        "we need to import style and content images of the same size"
+    # if you want to use white noise instead uncomment the below line:
+    #input_img = torch.randn(content_img.data.size(), device=device)
+    assert style_img.size() == content_img.size(), \
+    "we need to import style and content images of the same size"
 
 
     return

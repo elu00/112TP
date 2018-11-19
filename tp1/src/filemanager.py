@@ -4,7 +4,16 @@ import shutil
 from PIL import Image
 import torchvision.transforms as transforms
 
+from app import Style
+
 IMAGE_PROCESSING_RESOLUTION = 512
+
+#################################
+# Style/Folder Processing
+##################################
+
+def styleFromFolder(path):
+    return Style()
 
 #################################
 # Computational Wrapper Functions
