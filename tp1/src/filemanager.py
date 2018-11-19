@@ -5,6 +5,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 
 from app import Style
+from alg import *
 
 IMAGE_PROCESSING_RESOLUTION = 512
 
@@ -69,10 +70,6 @@ def processImage(imgPath, device):
     output.save(texture, optimize = True, quality = 60)
     i += 1
     print("Style transferred!")
-
-
-
-
 
 
 

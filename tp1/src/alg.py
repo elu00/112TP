@@ -191,7 +191,7 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 
 
 
-def main(path_to_dumped_textures = '../demo/dumped_textures', path_to_actual_textures = '../demo/base_textures/G8M'):
+def main(style_img, content_img):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # desired size of the output image
     imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu
