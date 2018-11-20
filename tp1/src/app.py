@@ -8,6 +8,7 @@ import subprocess
 
 PATH_TO_DOLPHIN = "Dolphin.exe"
 PATH_TO_GAME = ""
+PATH_TO_TEXTURES = ""
 WINDOW_DIMENSIONS = (600,600)
 
 class Style(object):
@@ -35,15 +36,19 @@ class Style(object):
         Folder: %s                   \n
         ''' % (self.name, self.descr, self.alg, 100, self.styleDir)
 
-    def oof(self):
-        pass
+    def load(self):
+        filemanager.loadFolder(self.styleDir, PATH_TO_TEXTURES)
+
+    def compute(self):
+        return
 
 class StyleLoader(QWidget):
     def __init__(self):
         super().__init__()
 
 
-    def initUI(self)
+    def initUI(self):
+        pass
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -55,7 +60,7 @@ class MainWindow(QWidget):
             "../styles/starrynight/preview.png"),
             Style("Sketch", "A basic black and white sketch",
             "../styles/sketch/style.jpg", "Cycle-GAN", True,
-            "..styles/sketch", "styles/sketch/preview.png")
+            "../styles/sketch", "styles/sketch/preview.jpg")
             ]
         self.initUI()
 
@@ -114,10 +119,12 @@ class MainWindow(QWidget):
 
     def updateStyle(self):
         # Update the preview image
-        style = self.curStyle
+        style = self.styles[self.styleMenu.currentIndex()]
         self.img.setPixmap(style.displayImage)
 
         self.info.setText(str(style))
+
+        self.curStyle = style
 
 
     def startGame(self):

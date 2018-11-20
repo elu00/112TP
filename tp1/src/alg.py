@@ -14,9 +14,16 @@ import torchvision.models as models
 import copy
 import os
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# desired size of the output image
+imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu
+
+cnn = models.vgg19(pretrained=True).features.to(device).eval()
+normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
+normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
+
 
 class ContentLoss(nn.Module):
-
     def __init__(self, target,):
         super(ContentLoss, self).__init__()
         # we 'detach' the target content from the tree used
@@ -41,7 +48,6 @@ def gram_matrix(input):
     # we 'normalize' the values of the gram matrix
     # by dividing by the number of element in each feature maps.
     return G.div(a * b * c * d)
-
 
 class StyleLoss(nn.Module):
 
@@ -138,8 +144,7 @@ def get_input_optimizer(input_img):
     optimizer = optim.LBFGS([input_img.requires_grad_()])
     return optimizer
 
-def run_style_transfer(cnn, normalization_mean, normalization_std,
-                       content_img, style_img, input_img, device, num_steps=500,
+def run_style_transfer(content_img, style_img, input_img, num_steps=500,
                        style_weight=1000000, content_weight=1):
     """Run the style transfer."""
     print('Building the style transfer model..')
@@ -187,27 +192,3 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
     input_img.data.clamp_(0, 1)
 
     return input_img
-
-
-
-
-def main(style_img, content_img):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # desired size of the output image
-    imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu
-
-    cnn = models.vgg19(pretrained=True).features.to(device).eval()
-    cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
-    cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
-        
-
-    # if you want to use white noise instead uncomment the below line:
-    #input_img = torch.randn(content_img.data.size(), device=device)
-    assert style_img.size() == content_img.size(), \
-    "we need to import style and content images of the same size"
-
-
-    return
-
-if __name__ == "__main__":
-    main()

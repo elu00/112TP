@@ -12,38 +12,41 @@
     That's quite a wordy introduction though, so let's break down the various terms and components of the project:
 
     \subsubsection{Style Transfer:}
-    A cool subset of Machine Learning/Deep Learning that seeks to quantify the ``style" or an image or painting, then apply it to other images. \\
+    A cool subset of Machine Learning/Deep Learning that seeks to quantify the ``style" or an image or painting, then apply it to other images. 
+    For this project, I'm interested in realizing these algorithms in real time.\\
     Examples: \\
     \includegraphics[width=\columnwidth]{ex1.jpg}\\
     \includegraphics[width=\columnwidth]{ex2.png}
 
-    \subsubsection{Application of Style Transfer, }:
-    Issue with generalized style transfer algorithms for real time video: 
-    Very computationally expensive. For arbitrary video streams, based on the algorithm used, single frames can take anywhere from seconds to minutes to process, even on (very) good hardware. 
-    Doesn't preserve temporal coherence, frequently resulting in flickering between frames. 
+    \subsubsection{Issues with generalized style transfer algorithms for real time video}
+    
+    Very computationally expensive. For arbitrary video streams, based on the algorithm used, single frames can take anywhere from seconds to minutes to process, even on (very) good hardware.
+    Also, these algorithms don't preserve temporal coherence, frequently resulting in flickering between frames. 
 
     My project aims to implement real-time style transfer on a very narrow subset of ``arbitrary video streams:" video games.
 
-    The output from video games is algorithmically generated, computationally using a combination of in-game models and textures to specify color.
+    Eseentially, I'm taking advantage of the fact that the output of video games is algorithmically generated, computationally using a combination of in-game models and textures to specify the content of each image.
     Thus, we can ``style transfer" onto the assets/textures used by the game, effectively getting similar results. 
     Analogy: doing style transfer at ``compile-time" instead of ``run-time."
 
 \subsection{Competitive Analysis}
-    As mentioned above, most 
+    As mentioned above, most of the existing solutions out the 
+    
+    Furthermore, in terms of 
 \subsection{Structural Plan}
     In terms of code, my source files will be divided into three primary files:
     \begin{enumerate}
         \item application.py: 
-        \item algorithms.py: 
+        \item alg.py: The actual implementation  
         \item fileManager.py: Facilitates the 
-    \end{enumerate
+    \end{enumerate}
 \subsection{Algorithmic Plan}
 
-    Terms:
-    Style Image: the image from which the ``Style" of the desired output image is extracted.
-    Input/Content Image: the image that dictates the ``content" and overall geometry of the desired output image
+    \subsubsection{Terms:}
+    Style Image: the image from which the ``Style" of the desired output image is extracted\\
+    Input/Content Image: the image that dictates the ``content" and overall geometry of the desired output image\\
 
-    Convolutional Neural Network + Gradient Descent:
+    \subsubsection{Convolutional Neural Network + Gradient Descent:}
     Using a pretrained neural network (traditionally, vgg16/vgg19), we can quantify ``style" and ``content" differences between two image by looking at various layers of the convolution. To do this, we simply run each image through the neural network, examine the desired layer, and take the RMS difference between each component in the tensor. 
     This gives us two different notions of ``distance": style distance and content distance. Our goal is to minimize these. 
 
@@ -51,7 +54,7 @@
 
     After the desired number of iterations, we return the output image and save it to a file.
 
-    Cycle GANs:
+    \subsubsection{Cycle GANs:}
     Two primary components:
     Generator 
     Discriminator
@@ -82,5 +85,5 @@
 	\item Built-in Python packages (os, subprocess) for file manipulations.
 \end{enumerate}
 \section{Storyboard}
-
+Attached in the zip
 \end{document}
