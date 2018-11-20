@@ -192,3 +192,10 @@ def run_style_transfer(content_img, style_img, input_img, num_steps=500,
     input_img.data.clamp_(0, 1)
 
     return input_img
+
+
+
+
+#################################
+# Modified from github.com/yunjey/mnist-svhn-transfer
+#################################

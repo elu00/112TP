@@ -30,7 +30,7 @@ class Style(object):
         if previewImage != None and os.path.exists(previewImage):
             self.displayImage = QPixmap(previewImage).scaledToWidth(600)
         else:
-            self.displayImage = QPixmap(styleImage)
+            self.displayImage = QPixmap(styleImage).scaledToWidth(600)
         self.computed = computed
 
 
@@ -44,6 +44,7 @@ class Style(object):
         Folder: %s        \n
         ''' % (self.name, self.descr, self.alg, self.imgCount, self.styleDir)
 
+    # Move 
     def load(self):
         filemanager.loadFolder(self.styleDir, PATH_TO_TEXTURES)
 
@@ -119,7 +120,6 @@ class StyleLoader(QDialog):
     def updateDescr(self):
         self.descr = self.descrEdit.text()
 
-
     def updateAlg(self, value):
         self.alg = Algorithms(value)
 
@@ -151,7 +151,7 @@ class MainWindow(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setGeometry(600,600,600,600)
+        self.setGeometry(200,200,800,800)
         layoutGrid = QGridLayout(self)
         self.setLayout(layoutGrid)
 

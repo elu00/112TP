@@ -13,8 +13,6 @@ IMAGE_PROCESSING_RESOLUTION = 512
 # Folder Processing
 ##################################
 
-
-
 def styleFromFolder(path):
     print(path)
     assert(os.path.exists(path + "cfg.txt"))
@@ -36,11 +34,18 @@ def styleFromFolder(path):
                 styleImage = styleImage, computed = True, previewImage = previewImage)
 
 
+def styleToFolder(style):
+    path = style.styleDir
+    with open(path + "cfg.txt", "r") as f:
+        f.writelines("awawaw")
+    return    
 #################################
 # Computational Wrapper Functions
 ##################################
 
 def computeStyle(style):
+
+    styleToFolder(style)
     return
 
 def findDumpedTextures(dumpDir):
