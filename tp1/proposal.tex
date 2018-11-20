@@ -30,15 +30,16 @@
     Analogy: doing style transfer at ``compile-time" instead of ``run-time."
 
 \subsection{Competitive Analysis}
-    As mentioned above, most of the existing solutions out the 
+    As mentioned above, most of the existing solutions out there are extremely computationally demanding.
+    The only working demo that does style transfer in remotely real time is \href{https://www.youtube.com/watch?v=vAelubuwquE}{NVIDIA's demo}, which requires 4x Titan Vs, something far beyond a typical workstation.
     
-    Furthermore, in terms of 
+    Furthermore, it doesn't seem like anyone has attempted to apply style transfer to video games at all, which means this project represents something entirely new.
 \subsection{Structural Plan}
     In terms of code, my source files will be divided into three primary files:
     \begin{enumerate}
-        \item application.py: 
-        \item alg.py: The actual implementation  
-        \item fileManager.py: Facilitates the 
+        \item application.py: Implements the main user interface in QT. Handles function calls and other changes as necessary.
+        \item alg.py: The actual implementations of the two algorithms described above.
+        \item fileManager.py: Various utility functions that are used throughout the previous two files, with a particular emphasis on file system management.
     \end{enumerate}
 \subsection{Algorithmic Plan}
 
@@ -61,14 +62,14 @@
     First, we write a generator that naively does some basic operations on the input/style images. Most importantly, this generator is very fast, and can produce multiple images from a given pair of inputs very quickly. 
 
     Then, we write a discriminator that can pick the ``best" image out a set of candidate images, and run the generator again on this ``best" image. As part of the ``cycle" aspect, we also frequently regularize the outputs of this as to not get stuck in local maxima. 
-    Complete toolchain:
-    Main technologies: Pytorch, QT, Dolphin Emulator (for actually running the games)
-    Workflow: 
-    (Optional/computationally demanding) Extract textures from the game using Dolphin Emulator, facilitated by a QT GUI
-    Parse the extracted textures from dolphin with Python builtin file operations
-    Run the style transfer algorithms on above images with custom implementations in Pytorch
-    Replace the original textures in dolphin
-    Play the game again, using a button somewhere in the GUI.
+    \subsubsection{Complete toolchain:}
+    Main technologies: Pytorch, QT, Dolphin Emulator (for actually running the games). \\
+    Workflow: \\
+    (Optional/computationally demanding) Extract textures from the game using Dolphin Emulator, facilitated by a QT GUI. \\
+    Parse the extracted textures from dolphin with Python builtin file operations \\
+    Run the style transfer algorithms on above images with custom implementations in Pytorch \\
+    Replace the original textures in dolphin \\
+    Play the game again, using a button somewhere in the GUI. \\
 
 \subsection{Timeline Plan}
     \textbf{TP1:} Have user interface/GUI designed and implemented. Seperately, have a working version of the convolutional NN algorithm.\\
@@ -85,5 +86,13 @@
 	\item Built-in Python packages (os, subprocess) for file manipulations.
 \end{enumerate}
 \section{Storyboard}
-Attached in the zip
+See storyboard.png
+\begin{enumerate}[(1)]
+    \item The default user interface
+    \item Styles can be dynamically changed using the dropdown menu
+    \item After clicking "play game" ....
+    \item Dolphin will launch with the modified textures
+    \item If no preview image is available, fallback to the style image.
+    \item New styles can also be added with an input image.
+\end{enumerate}
 \end{document}

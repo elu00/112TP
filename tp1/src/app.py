@@ -20,6 +20,7 @@ class Style(object):
         self.styleImage = styleImage
         self.styleDir = styleDir
         self.icon = QIcon(styleImage)
+        self.imgCount = 100
         if previewImage != None and os.path.exists(previewImage):
             self.displayImage = QPixmap(previewImage).scaledToWidth(600)
         else:
@@ -34,7 +35,7 @@ class Style(object):
         Algorithm: %s                \n
         Images: %s                   \n
         Folder: %s                   \n
-        ''' % (self.name, self.descr, self.alg, 100, self.styleDir)
+        ''' % (self.name, self.descr, self.alg, self.imgCount, self.styleDir)
 
     def load(self):
         filemanager.loadFolder(self.styleDir, PATH_TO_TEXTURES)
@@ -53,6 +54,7 @@ class StyleLoader(QWidget):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        # Hardcoded for now, but will be algorithmically generated later
         self.styles = [Style(
             "Starry Night", "Van Gogh's Starry Night", 
             "../styles/starrynight/style.jpg", "Convolution Neural Net",
@@ -60,7 +62,10 @@ class MainWindow(QWidget):
             "../styles/starrynight/preview.png"),
             Style("Sketch", "A basic black and white sketch",
             "../styles/sketch/style.jpg", "Cycle-GAN", True,
-            "../styles/sketch", "styles/sketch/preview.jpg")
+            "../styles/sketch", "../styles/sketch/preview.jpg"),
+             Style("Picasso", "Picasso",
+            "../styles/picasso/style.jpg", "Cycle-GAN", False,
+            "../styles/picasso")
             ]
         self.initUI()
 
@@ -123,7 +128,10 @@ class MainWindow(QWidget):
         self.img.setPixmap(style.displayImage)
 
         self.info.setText(str(style))
-
+        if style.computed:
+            self.computeButton.hide()
+        else:
+            self.computeButton.show()
         self.curStyle = style
 
 

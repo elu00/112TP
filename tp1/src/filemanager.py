@@ -24,10 +24,8 @@ def styleFromFolder(path):
 def computeStyle(style):
     return
 
-
 def findDumpedTextures(dumpDir):
     return list(os.path.listdir(dumpDir))
-
 
 def recursiveGetFullPath(walk):
     stuff = dict()
@@ -43,8 +41,6 @@ def find(name, path):
             return os.path.join(root, name)
     return None
 
-
-
 def loadImage(imgPath, device):
     img = Image.open(imgPath)
     # Storing the alpha channel for future use
@@ -59,16 +55,12 @@ def loadImage(imgPath, device):
     content_img = image_loader(content_img)
 
 
-
     image = transforms.ToTensor()(image).unsqueeze(0)
     return (image.to(alg.device, torch.float))
 
-def processImage(imgPath):
+def processImage(imgPath, styleImg):
 
     input_img = content_img.clone()
-
-
-
     output = alg.run_style_transfer(content_img, style_img, input_img)
     output = output.cpu().clone().detach().squeeze(0)
     output = transforms.ToPILImage()(output)
