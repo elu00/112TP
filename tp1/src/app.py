@@ -38,20 +38,25 @@ class Style(object):
     def oof(self):
         pass
 
-class StyleLoad(QWidget):
+class StyleLoader(QWidget):
     def __init__(self):
         super().__init__()
-        return
+
+
+    def initUI(self)
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.styles = [Style(
             "Starry Night", "Van Gogh's Starry Night", 
-            "../styles/starrynight/style.jpg", "nn",
+            "../styles/starrynight/style.jpg", "Convolution Neural Net",
             True, "../styles/starrynight",
-            "../styles/starrynight/preview.png"
-        )]
+            "../styles/starrynight/preview.png"),
+            Style("Sketch", "A basic black and white sketch",
+            "../styles/sketch/style.jpg", "Cycle-GAN", True,
+            "..styles/sketch", "styles/sketch/preview.png")
+            ]
         self.initUI()
 
     def initUI(self):
