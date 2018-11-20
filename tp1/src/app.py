@@ -64,6 +64,9 @@ class StyleLoader(QDialog):
         nameWrapper = QHBoxLayout()
         nameLabel = QLabel("Name the Style")
         self.nameEdit = QLineEdit(self)
+        self.nameEdit.setText("NewStyle")
+        self.nameEdit.editingFinished.connect(self.updateName)
+        self.updateName()
         nameWrapper.addWidget(nameLabel)
         nameWrapper.addWidget(self.nameEdit)
         layout.addLayout(nameWrapper)
@@ -73,6 +76,8 @@ class StyleLoader(QDialog):
         descrWrapper = QHBoxLayout()
         descrLabel = QLabel("Add a short description")
         self.descrEdit = QLineEdit(self)
+        self.descrEdit.setText("Description")
+        self.descrEdit.editingFinished.connect(self.updateDescr)
         descrWrapper.addWidget(descrLabel)
         descrWrapper.addWidget(self.descrEdit)
         layout.addLayout(descrWrapper)
@@ -109,10 +114,10 @@ class StyleLoader(QDialog):
         self.checkCompleteness()
 
     def updateName(self):
-        self.name = "name"
+        self.name = self.nameEdit.text()
 
     def updateDescr(self):
-        self.descr = "descr"
+        self.descr = self.descrEdit.text()
 
 
     def updateAlg(self, value):
@@ -189,7 +194,7 @@ class MainWindow(QWidget):
 
         # Populate the interface
         self.curStyle = self.styles[0]
-        self.updateStyle()
+        self.updateStyle(0)
 
         # Show the window 
         self.show()
@@ -201,9 +206,9 @@ class MainWindow(QWidget):
         return
 
 
-    def updateStyle(self):
+    def updateStyle(self, value):
         # Update the preview image
-        style = self.styles[self.styleMenu.currentIndex()]
+        style = self.styles[value]
         self.img.setPixmap(style.displayImage)
 
         self.info.setText(str(style))
