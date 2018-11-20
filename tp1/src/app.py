@@ -1,15 +1,21 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QGridLayout, QComboBox, QProgressBar
+from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QPixmap
+
 import sys
 import alg
 import filemanager
 import os
+import enum
 import subprocess
 
 PATH_TO_DOLPHIN = "Dolphin.exe"
 PATH_TO_GAME = ""
 PATH_TO_TEXTURES = ""
 WINDOW_DIMENSIONS = (600,600)
+
+class Algorithms(enum.Enum):
+    Conv_NN = 0
+    Cycle_GAN = 1
 
 class Style(object):
     def __init__(self, name, descr, styleImage, alg, computed,
@@ -30,11 +36,12 @@ class Style(object):
 
     def __repr__(self):
         return \
-        '''Current Style: %s \n
-        Description: %s              \n
-        Algorithm: %s                \n
-        Images: %s                   \n
-        Folder: %s                   \n
+        '''
+        Current Style: %s \n
+        Description: %s   \n
+        Algorithm: %s     \n
+        Images: %s        \n
+        Folder: %s        \n
         ''' % (self.name, self.descr, self.alg, self.imgCount, self.styleDir)
 
     def load(self):
@@ -43,30 +50,99 @@ class Style(object):
     def compute(self):
         return
 
-class StyleLoader(QWidget):
-    def __init__(self):
-        super().__init__()
+class StyleLoader(QDialog):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.initUI()
 
 
     def initUI(self):
-        pass
+        layout = QVBoxLayout(self)
 
+
+        # Select Name
+        nameWrapper = QHBoxLayout()
+        nameLabel = QLabel("Name the Style")
+        self.nameEdit = QLineEdit(self)
+        nameWrapper.addWidget(nameLabel)
+        nameWrapper.addWidget(self.nameEdit)
+        layout.addLayout(nameWrapper)
+
+
+        # Add Description
+        descrWrapper = QHBoxLayout()
+        descrLabel = QLabel("Add a short description")
+        self.descrEdit = QLineEdit(self)
+        descrWrapper.addWidget(descrLabel)
+        descrWrapper.addWidget(self.descrEdit)
+        layout.addLayout(descrWrapper)
+
+        # Style Image Selection
+        self.imgSelect = QFileDialog(self)        
+        layout.addWidget(self.imgSelect)
+
+        # Select Algorithm
+        algWrapper = QHBoxLayout()
+        algLabel = QLabel("Algorithm to Run:")
+        self.algSelect = QComboBox(self)
+        self.algSelect.addItems([str(alg) for alg in Algorithms])
+        self.algSelect.currentIndexChanged.connect(self.updateAlg)
+        self.updateAlg(0)
+        algWrapper.addWidget(algLabel)
+        algWrapper.addWidget(self.algSelect)
+        layout.addLayout(algWrapper)
+
+        # Select the style directory
+
+        # Confirmation Buttons
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        buttons.button(QDialogButtonBox.Ok).setEnabled(False)
+        layout.addWidget(buttons)
+        self.buttons = buttons
+
+
+    def updateImage(self):
+        img = self.imgSelect
+        self.checkCompleteness()
+
+    def updateName(self):
+        self.name = "name"
+
+    def updateDescr(self):
+        self.descr = "descr"
+
+
+    def updateAlg(self, value):
+        self.alg = Algorithms(value)
+
+    def updateStyleDir(self):
+        self.styleDir = "yes"
+        self.checkCompleteness()
+
+    def checkCompleteness(self):
+        if True:
+            self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)    
+    
+    def getStyle(self):
+        return Style(name = self.name, descr = self.descr, styleImage = self.styleImage, 
+                        alg = self.alg, computed = False, styleDir = self.styleDir)
+
+    @staticmethod
+    def getNewStyle(parent = None):
+        dialog = StyleLoader(parent)
+        result = dialog.exec_()
+        if result == QDialog.Accepted:
+            return dialog.getStyle()
+        else:
+            return None
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        # Hardcoded for now, but will be algorithmically generated later
-        self.styles = [Style(
-            "Starry Night", "Van Gogh's Starry Night", 
-            "../styles/starrynight/style.jpg", "Convolution Neural Net",
-            True, "../styles/starrynight",
-            "../styles/starrynight/preview.png"),
-            Style("Sketch", "A basic black and white sketch",
-            "../styles/sketch/style.jpg", "Cycle-GAN", True,
-            "../styles/sketch", "../styles/sketch/preview.jpg"),
-             Style("Picasso", "Picasso",
-            "../styles/picasso/style.jpg", "Cycle-GAN", False,
-            "../styles/picasso")
-            ]
+        folders = ["../styles/starrynight/", "../styles/sketch/", "../styles/picasso/"]
+        self.styles = [filemanager.styleFromFolder(folder) for folder in folders]
         self.initUI()
 
     def initUI(self):
@@ -77,23 +153,23 @@ class MainWindow(QWidget):
         # Initialize UI Elements, then populate them with updateStyle()
 
         # Main Preview Image
-        self.img = QLabel(self)
+        self.img = QLabel()
         layoutGrid.addWidget(self.img, 0, 0, 4, 1)
 
         # If necessary, progress bar
-        self.progressBar = QProgressBar(self)
+        self.progressBar = QProgressBar()
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
         layoutGrid.addWidget(self.progressBar, 5, 0)
 
         # Style Selection Menu 
-        self.styleMenu = QComboBox(self)
+        self.styleMenu = QComboBox()
         self.populateStyles()
         self.styleMenu.currentIndexChanged.connect(self.updateStyle)
         layoutGrid.addWidget(self.styleMenu, 0, 1)
 
         # Info Box
-        self.info = QLabel(self)
+        self.info = QLabel()
         layoutGrid.addWidget(self.info, 1, 1)        
 
         # Compute Button
@@ -102,10 +178,11 @@ class MainWindow(QWidget):
 
         # Import New Style
         self.importButton = QPushButton("Import New Style...")
+        self.importButton.clicked.connect(self.importStyle)
         layoutGrid.addWidget(self.importButton, 3, 1)
 
         # Launch Button
-        self.launchButton = QPushButton("Start Game!", self)
+        self.launchButton = QPushButton("Start Game!")
         self.launchButton.clicked.connect(self.startGame)
         layoutGrid.addWidget(self.launchButton, 5, 1)
     
@@ -116,7 +193,9 @@ class MainWindow(QWidget):
 
         # Show the window 
         self.show()
+
     def populateStyles(self):
+        self.styleMenu.clear()
         for style in self.styles:
             self.styleMenu.addItem(style.icon, style.name)
         return
@@ -129,10 +208,16 @@ class MainWindow(QWidget):
 
         self.info.setText(str(style))
         if style.computed:
-            self.computeButton.hide()
+            self.computeButton.setEnabled(False)
         else:
-            self.computeButton.show()
+            self.computeButton.setEnabled(True)
         self.curStyle = style
+
+    def importStyle(self):
+        newStyle = StyleLoader.getNewStyle()
+        if newStyle != None:
+            self.styles += newStyle
+            self.populateStyles
 
 
     def startGame(self):

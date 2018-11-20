@@ -4,7 +4,7 @@ import shutil
 from PIL import Image
 import torchvision.transforms as transforms
 
-from app import Style
+from app import Style, Algorithms
 import alg
 
 IMAGE_PROCESSING_RESOLUTION = 512
@@ -13,8 +13,27 @@ IMAGE_PROCESSING_RESOLUTION = 512
 # Folder Processing
 ##################################
 
+
+
 def styleFromFolder(path):
-    return Style()
+    print(path)
+    assert(os.path.exists(path + "cfg.txt"))
+    with open(path + "cfg.txt", "r") as f:
+        lines = list(f)
+        name = lines[0].strip()
+        descr = lines[1].strip()
+        if lines[2] == "CONV_NN":
+            alg = Algorithms.Conv_NN
+        else:
+            alg = Algorithms.Cycle_GAN
+        styleDir = path + lines[3].strip()
+    styleImage = path + "style.jpg"
+    if (os.path.exists(path + "preview.jpg")):
+        previewImage = path + "preview.jpg"
+    else:
+        previewImage = None
+    return Style(name = name, descr = descr, alg = alg, styleDir = styleDir,
+                styleImage = styleImage, computed = True, previewImage = previewImage)
 
 
 #################################
