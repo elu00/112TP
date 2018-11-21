@@ -222,7 +222,7 @@ class MainWindow(QWidget):
         newStyle = StyleLoader.getNewStyle()
         if newStyle != None:
             self.styles += newStyle
-            self.populateStyles
+            self.populateStyles()
 
 
     def startGame(self):
