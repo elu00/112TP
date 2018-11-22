@@ -20,7 +20,7 @@ def styleFromFolder(path):
         lines = list(f)
         name = lines[0].strip()
         descr = lines[1].strip()
-        if lines[2] == "CONV_NN":
+        if lines[2] == "Algorithms.Conv_NN":
             alg = Algorithms.Conv_NN
         else:
             alg = Algorithms.Cycle_GAN
@@ -36,8 +36,9 @@ def styleFromFolder(path):
 
 def styleToFolder(style):
     path = style.styleDir
-    with open(path + "cfg.txt", "r") as f:
-        f.writelines("awawaw")
+    contents = [style.name, style.descr, str(style.alg). style.styleDir]
+    with open(path + "cfg.txt", "w+") as f:
+        f.writelines(contents)
     return    
 #################################
 # Computational Wrapper Functions
