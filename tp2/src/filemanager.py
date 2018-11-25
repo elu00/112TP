@@ -1,10 +1,11 @@
 import os
 import shutil
+import enum
 
+from PyQt5.QtGui import QIcon, QPixmap
 from PIL import Image
 import torchvision.transforms as transforms
 
-from app import Style, Algorithms
 import alg
 
 IMAGE_PROCESSING_RESOLUTION = 512
@@ -13,41 +14,78 @@ IMAGE_PROCESSING_RESOLUTION = 512
 # Folder Processing
 ##################################
 
-def styleFromFolder(path):
-    print(path)
-    assert(os.path.exists(path + "cfg.txt"))
-    with open(path + "cfg.txt", "r") as f:
-        lines = list(f)
-        name = lines[0].strip()
-        descr = lines[1].strip()
-        if lines[2] == "Algorithms.Conv_NN":
-            alg = Algorithms.Conv_NN
+class Algorithms(enum.Enum):
+    Conv_NN = 0
+    Cycle_GAN = 1
+
+class Style(object):
+    def __init__(self, name, descr, styleImage, alg, computed,
+                    styleDir, previewImage = None):
+        self.name = name
+        self.descr = descr
+        self.alg = alg
+        self.styleImage = styleImage
+        self.styleDir = styleDir
+        self.icon = QIcon(styleImage)
+        self.imgCount = 100
+        if previewImage != None and os.path.exists(previewImage):
+            self.displayImage = QPixmap(previewImage).scaledToWidth(600)
         else:
-            alg = Algorithms.Cycle_GAN
-        styleDir = path + lines[3].strip()
-    styleImage = path + "style.jpg"
-    if (os.path.exists(path + "preview.jpg")):
-        previewImage = path + "preview.jpg"
-    else:
-        previewImage = None
-    return Style(name = name, descr = descr, alg = alg, styleDir = styleDir,
-                styleImage = styleImage, computed = True, previewImage = previewImage)
+            self.displayImage = QPixmap(styleImage).scaledToWidth(600)
+        self.computed = computed
 
 
-def styleToFolder(style):
-    path = style.styleDir
-    contents = [style.name, style.descr, str(style.alg). style.styleDir]
-    with open(path + "cfg.txt", "w+") as f:
-        f.writelines(contents)
-    return    
+    def __repr__(self):
+        return \
+        '''
+        Current Style: %s \n
+        Description: %s   \n
+        Algorithm: %s     \n
+        Images: %s        \n
+        Folder: %s        \n
+        ''' % (self.name, self.descr, self.alg, self.imgCount, self.styleDir)
+
+    # Move 
+    def load(self):
+        fileManager.loadFolder(self.styleDir, PATH_TO_TEXTURES)
+    def compute(self):
+        return
+    def styleToFolder(style):
+        path = style.styleDir
+        contents = [style.name, style.descr, str(style.alg), style.styleDir]
+        if not os.path.exists(path):
+            os.mkdir(path)
+        with open(path + "cfg.txt", "w+") as f:
+            # Create folder if necessary, write images, write contents
+            f.writelines(contents)
+        return    
+
+    @staticmethod
+    def styleFromFolder(path):
+        print(path)
+        assert(os.path.exists(path + "cfg.txt"))
+        with open(path + "cfg.txt", "r") as f:
+            lines = list(f)
+            name = lines[0].strip()
+            descr = lines[1].strip()
+            if lines[2] == "Algorithms.Conv_NN":
+                alg = Algorithms.Conv_NN
+            else:
+                alg = Algorithms.Cycle_GAN
+            styleDir = path + lines[3].strip()
+        styleImage = path + "style.jpg"
+        if (os.path.exists(path + "preview.jpg")):
+            previewImage = path + "preview.jpg"
+        else:
+            previewImage = None
+        return Style(name = name, descr = descr, alg = alg, styleDir = styleDir,
+                    styleImage = styleImage, computed = True, previewImage = previewImage)
+
+
+  
 #################################
 # Computational Wrapper Functions
 ##################################
-
-def computeStyle(style):
-
-    styleToFolder(style)
-    return
 
 def findDumpedTextures(dumpDir):
     return list(os.path.listdir(dumpDir))

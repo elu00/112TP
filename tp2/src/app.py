@@ -3,7 +3,8 @@ from PyQt5.QtGui import QIcon, QPixmap
 
 import sys
 import alg
-import filemanager
+import fileManager
+from fileManager import Algorithms, Style
 import os
 import enum
 import subprocess
@@ -13,43 +14,6 @@ PATH_TO_GAME = ""
 PATH_TO_TEXTURES = ""
 WINDOW_DIMENSIONS = (600,600)
 
-class Algorithms(enum.Enum):
-    Conv_NN = 0
-    Cycle_GAN = 1
-
-class Style(object):
-    def __init__(self, name, descr, styleImage, alg, computed,
-                    styleDir, previewImage = None):
-        self.name = name
-        self.descr = descr
-        self.alg = alg
-        self.styleImage = styleImage
-        self.styleDir = styleDir
-        self.icon = QIcon(styleImage)
-        self.imgCount = 100
-        if previewImage != None and os.path.exists(previewImage):
-            self.displayImage = QPixmap(previewImage).scaledToWidth(600)
-        else:
-            self.displayImage = QPixmap(styleImage).scaledToWidth(600)
-        self.computed = computed
-
-
-    def __repr__(self):
-        return \
-        '''
-        Current Style: %s \n
-        Description: %s   \n
-        Algorithm: %s     \n
-        Images: %s        \n
-        Folder: %s        \n
-        ''' % (self.name, self.descr, self.alg, self.imgCount, self.styleDir)
-
-    # Move 
-    def load(self):
-        filemanager.loadFolder(self.styleDir, PATH_TO_TEXTURES)
-
-    def compute(self):
-        return
 
 class StyleLoader(QDialog):
     def __init__(self, parent = None):
@@ -60,12 +24,12 @@ class StyleLoader(QDialog):
     def initUI(self):
         layout = QVBoxLayout(self)
 
-
         # Select Name
         nameWrapper = QHBoxLayout()
         nameLabel = QLabel("Name the Style")
         self.nameEdit = QLineEdit(self)
         self.nameEdit.setText("NewStyle")
+        self.name = "NewStyle"
         self.nameEdit.editingFinished.connect(self.updateName)
         self.updateName()
         nameWrapper.addWidget(nameLabel)
@@ -78,14 +42,21 @@ class StyleLoader(QDialog):
         descrLabel = QLabel("Add a short description")
         self.descrEdit = QLineEdit(self)
         self.descrEdit.setText("Description")
+        self.descr = "Description"
         self.descrEdit.editingFinished.connect(self.updateDescr)
         descrWrapper.addWidget(descrLabel)
         descrWrapper.addWidget(self.descrEdit)
         layout.addLayout(descrWrapper)
 
         # Style Image Selection
-        self.imgSelect = QFileDialog(self)        
-        layout.addWidget(self.imgSelect)
+        imgWrapper = QHBoxLayout()
+        self.imgSelect = QPushButton("Select the style image")
+        self.imgSelect.clicked.connect(self.updateImage)
+        self.imgPath = QLabel()
+        self.styleImage = ""
+        imgWrapper.addWidget(self.imgSelect)
+        imgWrapper.addWidget(self.imgPath)
+        layout.addLayout(imgWrapper)
 
         # Select Algorithm
         algWrapper = QHBoxLayout()
@@ -99,6 +70,15 @@ class StyleLoader(QDialog):
         layout.addLayout(algWrapper)
 
         # Select the style directory
+        dirWrapper = QHBoxLayout()
+        self.dirSelect = QPushButton("Select the output/style directory")
+        self.dirSelect.clicked.connect(self.updateStyleDir)
+        self.dirPath = QLabel()
+        self.styleDir = ""
+        dirWrapper.addWidget(self.dirSelect)
+        dirWrapper.addWidget(self.dirPath)
+        layout.addLayout(dirWrapper)
+
 
         # Confirmation Buttons
         buttons = QDialogButtonBox(
@@ -111,7 +91,10 @@ class StyleLoader(QDialog):
 
 
     def updateImage(self):
-        img = self.imgSelect
+        fileTypes = "Images (*.jpg *.png)"
+        self.styleImage = QFileDialog.getOpenFileName(self, 
+                        "Choose an Image", "../styles", fileTypes)[0]
+        self.imgPath.setText(self.styleImage)
         self.checkCompleteness()
 
     def updateName(self):
@@ -124,16 +107,22 @@ class StyleLoader(QDialog):
         self.alg = Algorithms(value)
 
     def updateStyleDir(self):
-        self.styleDir = "yes"
+        self.styleDir = QFileDialog.getExistingDirectory(self, 
+                        "Choose a folder", "../styles")
+        self.dirPath.setText(self.styleDir)
         self.checkCompleteness()
 
     def checkCompleteness(self):
-        if True:
-            self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)    
+        if self.styleImage != "" and self.styleDir != "":
+            self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            self.buttons.button(QDialogButtonBox.Ok).setEnabled(False)
     
     def getStyle(self):
-        return Style(name = self.name, descr = self.descr, styleImage = self.styleImage, 
-                        alg = self.alg, computed = False, styleDir = self.styleDir)
+        return Style(name = self.name, descr = self.descr, 
+                        styleImage = self.styleImage, 
+                        alg = self.alg, computed = False, 
+                        styleDir = self.styleDir)
 
     @staticmethod
     def getNewStyle(parent = None):
@@ -146,8 +135,9 @@ class StyleLoader(QDialog):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("StyleDev")
         folders = ["../styles/starrynight/", "../styles/sketch/", "../styles/picasso/"]
-        self.styles = [filemanager.styleFromFolder(folder) for folder in folders]
+        self.styles = [Style.styleFromFolder(folder) for folder in folders]
         self.initUI()
 
     def initUI(self):
@@ -221,7 +211,7 @@ class MainWindow(QWidget):
     def importStyle(self):
         newStyle = StyleLoader.getNewStyle()
         if newStyle != None:
-            self.styles += newStyle
+            self.styles.append(newStyle)
             self.populateStyles()
 
 
