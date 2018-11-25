@@ -10,6 +10,7 @@ import alg
 
 IMAGE_PROCESSING_RESOLUTION = 512
 
+# TODO: Implement file processing
 #################################
 # Folder Processing
 ##################################
@@ -117,7 +118,6 @@ def loadImage(imgPath, device):
     content_img = img.resize(size, Image.ANTIALIAS).convert("RGB")
     content_img = image_loader(content_img)
 
-
     image = transforms.ToTensor()(image).unsqueeze(0)
     return (image.to(alg.device, torch.float))
 
@@ -141,8 +141,8 @@ def processImage(imgPath, styleImg):
 def loadFolder(folder, destination, newName):
     assert(os.path.exists(folder) and os.path.exists(destination)), \
     "Invalid folder/directory"
-    shutil.copytree(folder, destination)
-    os.rename(destination, newName)
+    shutil.copytree(folder, destination + folder)
+    os.rename(destination + folder, newName)
 
 
 
