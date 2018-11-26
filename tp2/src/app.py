@@ -147,16 +147,15 @@ class MainWindow(QWidget):
         self.setLayout(layoutGrid)
 
         # Initialize UI Elements, then populate them with updateStyle()
-
         # Main Preview Image
         self.img = QLabel()
-        layoutGrid.addWidget(self.img, 0, 0, 4, 1)
+        layoutGrid.addWidget(self.img, 0, 0, 5, 1)
 
         # If necessary, progress bar
         self.progressBar = QProgressBar()
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
-        layoutGrid.addWidget(self.progressBar, 5, 0)
+        layoutGrid.addWidget(self.progressBar, 6, 0)
 
         # Style Selection Menu 
         self.styleMenu = QComboBox()
@@ -164,27 +163,43 @@ class MainWindow(QWidget):
         self.styleMenu.currentIndexChanged.connect(self.updateStyle)
         layoutGrid.addWidget(self.styleMenu, 0, 1)
 
+
+        # ISO/Game Image Selection
+        self.isoSelect = QPushButton("Game Image Selection")
+        self.isoSelect.clicked.connect(self.updateISO)
+        self.isoPath = ""
+        layoutGrid.addWidget(self.isoSelect, 1, 1)
+
+        # Select the style directory
+        self.dolphinSelect = QPushButton("Select Dolphin Installation Path")
+        self.dolphinSelect.clicked.connect(self.updateDolphinPath)
+        self.dolphinPath = ""
+        layoutGrid.addWidget(self.dolphinSelect, 2, 1)
+
         # Info Box
         self.info = QLabel()
-        layoutGrid.addWidget(self.info, 1, 1)        
+        layoutGrid.addWidget(self.info, 3, 1)   
 
-        # Compute Button
-        self.computeButton = QPushButton("Calculate Style")
-        layoutGrid.addWidget(self.computeButton, 2, 1)
 
         # Import New Style
         self.importButton = QPushButton("Import New Style...")
         self.importButton.clicked.connect(self.importStyle)
-        layoutGrid.addWidget(self.importButton, 3, 1)
+        layoutGrid.addWidget(self.importButton, 4, 1)
+
+        # Compute Button
+        self.computeButton = QPushButton("Calculate Style")
+        layoutGrid.addWidget(self.computeButton, 5, 1)
+
 
         # Launch Button
         self.launchButton = QPushButton("Start Game!")
         self.launchButton.clicked.connect(self.startGame)
-        layoutGrid.addWidget(self.launchButton, 5, 1)
+        layoutGrid.addWidget(self.launchButton, 6, 1)
     
 
         # Populate the interface
         self.curStyle = self.styles[0]
+        self.updatePlayStatus()
         self.updateStyle(0)
 
         # Show the window 
@@ -209,14 +224,33 @@ class MainWindow(QWidget):
             self.computeButton.setEnabled(True)
         self.curStyle = style
 
+    def updateISO(self):
+        fileTypes = "GameCube Files (*.iso *.wbfs)"
+        self.isoPath = QFileDialog.getOpenFileName(self, 
+                        "Browse to the game", "../", fileTypes)[0]
+        self.updatePlayStatus()
+
+    def updateDolphinPath(self):
+        self.dolphinPath = QFileDialog.getExistingDirectory(self, 
+                        "Choose the Dolphin Directory", "../")
+        self.updatePlayStatus()
+
     def importStyle(self):
         newStyle = StyleLoader.getNewStyle()
         if newStyle != None:
             self.styles.append(newStyle)
             self.populateStyles()
 
+    def updatePlayStatus(self):
+        computed = self.curStyle.computed
+        if computed and self.isoPath != "" and self.dolphinPath != "":
+            self.launchButton.setEnabled(True)
+        else:
+            self.launchButton.setEnabled(False)
+
     def startGame(self):
-        subprocess.run(PATH_TO_DOLPHIN + PATH_TO_GAME)
+        print(self.dolphinPath + "/Dolphin.exe")
+        subprocess.run([self.dolphinPath + "/Dolphin.exe", "-e", self.isoPath])
 
 def main():
     app = QApplication([])
