@@ -1,5 +1,4 @@
 Starry Night
 Van Gogh's Starry Night
 Algorithms.Conv_NN
-G8M
-aaaaa
+C:/Users/elu/source/repos/112tp/tp2/styles/starrynight

@@ -1,4 +1,4 @@
 Picasso
-A Picasso Painting
-Algorithms.Cycle_GAN
-G8M
+Picasso Painting
+Algorithms.Conv_NN
+C:/Users/elu/source/repos/112tp/tp2/styles/picasso

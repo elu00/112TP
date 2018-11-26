@@ -57,12 +57,12 @@ class Style(object):
         window.progressBar.setMaximum(self.imgCount - 1)
         # Precompute style tensor
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        styleTensor = loadImage(self.styleImage, device)
+        styleTensor = loadImage(self.styleImage, device)[0]
         # Process each image
         for i in range(self.imgCount):
             imgPath = self.imgList[i]
             # Manipulations to make the path correct
-            outputPath = self.styleDir + "/" + imgPath[5:-3] + "jpg"
+            outputPath = self.styleDir + "/" + imgPath[5:-3] + "png"
             processImage(imgPath, styleTensor, outputPath, device)
             window.progressBar.setValue(i)
         self.writeCFG()
@@ -136,7 +136,7 @@ def processImage(imgPath, styleImg, outputPath, device):
     output = output.cpu().clone().detach().squeeze(0)
     output = transforms.ToPILImage()(output)
     output = output.resize(origDim)
-    if alpha_img != None:
+    if alphaIMG != None:
         output.putalpha(alphaIMG)
     output.save(outputPath, optimize = True, quality = 60)
     print("Style transferred!")
