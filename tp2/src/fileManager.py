@@ -4,6 +4,7 @@ import enum
 
 from PyQt5.QtGui import QIcon, QPixmap
 from PIL import Image
+import torch
 import torchvision.transforms as transforms
 
 import alg
@@ -55,13 +56,14 @@ class Style(object):
         window.progressBar.setMinimum(0)
         window.progressBar.setMaximum(self.imgCount - 1)
         # Precompute style tensor
-        styleTensor = loadImage(self.styleImage)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        styleTensor = loadImage(self.styleImage, device)
         # Process each image
         for i in range(self.imgCount):
             imgPath = self.imgList[i]
             # Manipulations to make the path correct
             outputPath = self.styleDir + "/" + imgPath[5:-3] + "jpg"
-            processImage(imgPath, styleTensor, outputPath)
+            processImage(imgPath, styleTensor, outputPath, device)
             window.progressBar.setValue(i)
         self.writeCFG()
         self.computed = True
@@ -117,27 +119,25 @@ def loadImage(imgPath, device):
     img = Image.open(imgPath)
     # Storing the alpha channel for future use
     try:
-        alpha_img = img.getchannel('A')
+        alphaIMG = img.getchannel('A')
     except:
-        alpha_img = None
-    orig_dim = img.size
+        alphaIMG = None
+    origDim = img.size
     size = [IMAGE_PROCESSING_RESOLUTION, IMAGE_PROCESSING_RESOLUTION]
-    content_img = img.resize(size, Image.ANTIALIAS).convert("RGB")
-    content_img = image_loader(content_img)
+    img = img.resize(size).convert("RGB")
+    img = transforms.ToTensor()(img).unsqueeze(0)
+    return (img.to(alg.device, torch.float), origDim, alphaIMG)
 
-    image = transforms.ToTensor()(image).unsqueeze(0)
-    return (image.to(alg.device, torch.float), orig_dim, alpha_img)
-
-def processImage(imgPath, styleImg, outputPath):
-    content_img, orig_dim, alpha_img = loadImage(imgPath)
-    input_img = content_img.clone()
-    output = alg.run_style_transfer(content_img, style_img, input_img)
+def processImage(imgPath, styleImg, outputPath, device):
+    contentImg, origDim, alphaIMG = loadImage(imgPath, device)
+    inputImg = contentImg.clone()
+    output = alg.run_style_transfer(contentImg, styleImg, inputImg)
     # Process the output image
     output = output.cpu().clone().detach().squeeze(0)
     output = transforms.ToPILImage()(output)
-    output = output.resize(orig_dim)
+    output = output.resize(origDim)
     if alpha_img != None:
-        output.putalpha(alpha_img)
+        output.putalpha(alphaIMG)
     output.save(outputPath, optimize = True, quality = 60)
     print("Style transferred!")
 
