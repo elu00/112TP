@@ -1,4 +1,4 @@
 Picasso
 A Picasso Painting
 Algorithms.Cycle_GAN
-G8M/
+G8M

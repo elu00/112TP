@@ -1,6 +1,7 @@
-#################################
-# Modified from https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
-#################################
+#################################################################################
+# All of the functions and classes defined within this file are
+# modified from https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
+#################################################################################
 
 import torch
 import torch.nn as nn
@@ -144,7 +145,7 @@ def get_input_optimizer(input_img):
     optimizer = optim.LBFGS([input_img.requires_grad_()])
     return optimizer
 
-def run_style_transfer(content_img, style_img, input_img, num_steps=500,
+def run_style_transfer(content_img, style_img, input_img, num_steps=200,
                        style_weight=1000000, content_weight=1):
     """Run the style transfer."""
     print('Building the style transfer model..')
@@ -192,10 +193,3 @@ def run_style_transfer(content_img, style_img, input_img, num_steps=500,
     input_img.data.clamp_(0, 1)
 
     return input_img
-
-
-
-
-#################################
-# Modified from github.com/yunjey/mnist-svhn-transfer
-#################################

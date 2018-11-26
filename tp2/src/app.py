@@ -135,7 +135,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("StyleDev")
-        folders = ["../styles/starrynight/", "../styles/sketch/", "../styles/picasso/"]
+        folders = ["../styles/starrynight", "../styles/sketch", "../styles/picasso"]
         self.styles = [Style.styleFromFolder(folder) for folder in folders]
         self.initUI()
 
@@ -161,7 +161,6 @@ class MainWindow(QWidget):
         self.styleMenu.currentIndexChanged.connect(self.updateStyle)
         layoutGrid.addWidget(self.styleMenu, 0, 1)
 
-
         # ISO/Game Image Selection
         self.isoSelect = QPushButton("Game Image Selection")
         self.isoSelect.clicked.connect(self.updateISO)
@@ -186,8 +185,8 @@ class MainWindow(QWidget):
 
         # Compute Button
         self.computeButton = QPushButton("Calculate Style")
+        self.computeButton.clicked.connect(self.computeActiveStyle)
         layoutGrid.addWidget(self.computeButton, 5, 1)
-
 
         # Launch Button
         self.launchButton = QPushButton("Start Game!")
@@ -197,7 +196,7 @@ class MainWindow(QWidget):
 
         # Populate the interface
         self.curStyle = self.styles[0]
-        self.updatePlayStatus()
+        self.updateStatus()
         self.updateStyle(0)
 
         # Show the window 
@@ -216,22 +215,22 @@ class MainWindow(QWidget):
         self.img.setPixmap(style.displayImage)
 
         self.info.setText(str(style))
-        if style.computed:
-            self.computeButton.setEnabled(False)
-        else:
-            self.computeButton.setEnabled(True)
         self.curStyle = style
+        self.updateStatus()
+
+    def computeActiveStyle(self):
+        self.curStyle.compute(self)
 
     def updateISO(self):
         fileTypes = "GameCube Files (*.iso *.wbfs)"
         self.isoPath = QFileDialog.getOpenFileName(self, 
                         "Browse to the game", "../", fileTypes)[0]
-        self.updatePlayStatus()
+        self.updateStatus()
 
     def updateDolphinPath(self):
         self.dolphinPath = QFileDialog.getExistingDirectory(self, 
                         "Choose the Dolphin Directory", "../")
-        self.updatePlayStatus()
+        self.updateStatus()
 
     def importStyle(self):
         newStyle = StyleLoader.getNewStyle()
@@ -239,15 +238,29 @@ class MainWindow(QWidget):
             self.styles.append(newStyle)
             self.populateStyles()
 
-    def updatePlayStatus(self):
+    def updateStatus(self):
         computed = self.curStyle.computed
         if computed and self.isoPath != "" and self.dolphinPath != "":
+            self.launchButton.setText("Start Game!")
             self.launchButton.setEnabled(True)
         else:
+            self.launchButton.setText("Need paths set or style to be computed")
             self.launchButton.setEnabled(False)
+        # Compute Button Stuff
+        if computed:
+            self.progressBar.hide()
+            self.computeButton.setEnabled(False)
+            self.computeButton.setText("Style Already Computed!")
+        else:
+            self.progressBar.show()
+            self.progressBar.setValue(0)
+            self.computeButton.setEnabled(True)
+            self.computeButton.setText("Calculate Style")
+
+
 
     def startGame(self):
-        print(self.dolphinPath + "/Dolphin.exe")
+        self.curStyle.load(self)
         subprocess.run([self.dolphinPath + "/Dolphin.exe", "-e", self.isoPath])
 
 def main():

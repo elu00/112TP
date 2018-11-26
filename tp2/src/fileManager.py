@@ -8,7 +8,8 @@ import torchvision.transforms as transforms
 
 import alg
 
-IMAGE_PROCESSING_RESOLUTION = 512
+IMAGE_PROCESSING_RESOLUTION = 128
+GAME_ID = "G8M"
 
 # TODO: Implement file processing
 #################################
@@ -28,7 +29,9 @@ class Style(object):
         self.styleImage = styleImage
         self.styleDir = styleDir
         self.icon = QIcon(styleImage)
-        self.imgCount = 100
+        tempList = list(os.listdir("dump"))
+        self.imgCount = len(tempList)
+        self.imgList = ["dump/" + tempList[i] for i in range(self.imgCount)]
         if previewImage != None and os.path.exists(previewImage):
             self.displayImage = QPixmap(previewImage).scaledToWidth(600)
         else:
@@ -42,30 +45,53 @@ class Style(object):
         Current Style: %s \n
         Description: %s   \n
         Algorithm: %s     \n
+        Computed: %s      \n
         Images: %s        \n
         Folder: %s        \n
-        ''' % (self.name, self.descr, self.alg, self.imgCount, self.styleDir)
+        ''' % (self.name, self.descr, self.alg, self.computed,
+                                     self.imgCount, self.styleDir)
 
-    # Move 
-    def load(self):
-        fileManager.loadFolder(self.styleDir, PATH_TO_TEXTURES)
-    def compute(self):
+    def compute(self, window):
+        window.progressBar.setMinimum(0)
+        window.progressBar.setMaximum(self.imgCount - 1)
+        # Precompute style tensor
+        styleTensor = loadImage(self.styleImage)
+        # Process each image
+        for i in range(self.imgCount):
+            imgPath = self.imgList[i]
+            # Manipulations to make the path correct
+            outputPath = self.styleDir + "/" + imgPath[5:-3] + "jpg"
+            processImage(imgPath, styleTensor, outputPath)
+            window.progressBar.setValue(i)
+        self.writeCFG()
+        self.computed = True
+        window.updateStatus()
         return
-    def styleToFolder(style):
-        path = style.styleDir
-        contents = [style.name, style.descr, str(style.alg), style.styleDir]
+
+    def load(self, window):
+        texturePath = window.dolphinPath + "/User/Load/Textures/" + GAME_ID
+        try:
+            os.rmdir(texturePath)
+        except:
+            pass
+        shutil.copytree(self.styleDir, texturePath)
+
+    def writeCFG(self):
+        path = self.styleDir
+        contents = "\n".join([self.name, self.descr, str(self.alg), path])
         if not os.path.exists(path):
             os.mkdir(path)
-        with open(path + "cfg.txt", "w+") as f:
+        with open(path + "/cfg.txt", "w+") as f:
             # Create folder if necessary, write images, write contents
             f.writelines(contents)
+        shutil.copyfile(self.styleImage, path + "/style.jpg")
         return    
 
     @staticmethod
     def styleFromFolder(path):
-        print(path)
-        assert(os.path.exists(path + "cfg.txt"))
-        with open(path + "cfg.txt", "r") as f:
+        print("Loading Style from:" + path)
+        assert(os.path.exists(path + "/cfg.txt"))
+        with open(path + "/cfg.txt", "r") as f:
             lines = list(f)
             name = lines[0].strip()
             descr = lines[1].strip()
@@ -73,10 +99,10 @@ class Style(object):
                 alg = Algorithms.Conv_NN
             else:
                 alg = Algorithms.Cycle_GAN
-            styleDir = path + lines[3].strip()
-        styleImage = path + "style.jpg"
-        if (os.path.exists(path + "preview.jpg")):
-            previewImage = path + "preview.jpg"
+            styleDir = path + "/" + lines[3].strip()
+        styleImage = path + "/style.jpg"
+        if (os.path.exists(path + "/preview.jpg")):
+            previewImage = path + "/preview.jpg"
         else:
             previewImage = None
         return Style(name = name, descr = descr, alg = alg, styleDir = styleDir,
@@ -87,52 +113,33 @@ class Style(object):
 #################################
 # Computational Wrapper Functions
 ##################################
-
-def findDumpedTextures(dumpDir):
-    return list(os.path.listdir(dumpDir))
-
-def recursiveGetFullPath(walk):
-    stuff = dict()
-    for dir in walk:
-        for file in dir[2]:
-            stuff[file] = dir[0] + '/' + file
-    return stuff
-
-
-def find(name, path):
-    for root, dirs, files in os.walk(path):
-        if name in files:
-            return os.path.join(root, name)
-    return None
-
 def loadImage(imgPath, device):
     img = Image.open(imgPath)
     # Storing the alpha channel for future use
-    hasAlpha = True
     try:
         alpha_img = img.getchannel('A')
     except:
-        hasAlpha = False
+        alpha_img = None
     orig_dim = img.size
     size = [IMAGE_PROCESSING_RESOLUTION, IMAGE_PROCESSING_RESOLUTION]
     content_img = img.resize(size, Image.ANTIALIAS).convert("RGB")
     content_img = image_loader(content_img)
 
     image = transforms.ToTensor()(image).unsqueeze(0)
-    return (image.to(alg.device, torch.float))
+    return (image.to(alg.device, torch.float), orig_dim, alpha_img)
 
-def processImage(imgPath, styleImg):
-
+def processImage(imgPath, styleImg, outputPath):
+    content_img, orig_dim, alpha_img = loadImage(imgPath)
     input_img = content_img.clone()
     output = alg.run_style_transfer(content_img, style_img, input_img)
+    # Process the output image
     output = output.cpu().clone().detach().squeeze(0)
     output = transforms.ToPILImage()(output)
-    output = output.resize(orig_dim, Image.ANTIALIAS)
-    if hasAlpha:
+    output = output.resize(orig_dim)
+    if alpha_img != None:
         output.putalpha(alpha_img)
-    output.save(texture, optimize = True, quality = 60)
+    output.save(outputPath, optimize = True, quality = 60)
     print("Style transferred!")
-
 
 
 #############################

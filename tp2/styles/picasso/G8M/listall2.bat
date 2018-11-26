@@ -1,1 +1,0 @@
-for /f %%A in ('forfiles /s /m *.png /c "cmd /c echo @file"') do echo %%~A >> filelist2.txt
