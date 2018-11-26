@@ -14,8 +14,6 @@ PATH_TO_GAME = ""
 PATH_TO_TEXTURES = ""
 WINDOW_DIMENSIONS = (600,600)
 
-#TODO: Implement Dolphin game loading
-
 class StyleLoader(QDialog):
     def __init__(self, parent = None):
         super().__init__(parent)
