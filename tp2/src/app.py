@@ -135,7 +135,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("StyleDev")
-        folders = ["../styles/starrynight"]#, "../styles/sketch", "../styles/picasso"]
+        folders = ["../styles/starrynight", "../styles/sketch", "../styles/picasso"]
         self.styles = [Style.styleFromFolder(folder) for folder in folders]
         self.initUI()
 
