@@ -1,0 +1,4 @@
+Starry Night
+Van Gogh's Starry Night
+Algorithms.Conv_NN
+C:/Users/elu/source/repos/112tp/tp2/styles/starrynight

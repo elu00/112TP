@@ -12,7 +12,6 @@ import alg
 IMAGE_PROCESSING_RESOLUTION = 128
 GAME_ID = "G8M"
 
-# TODO: Implement file processing
 #################################
 # Folder Processing
 ##################################
@@ -71,11 +70,12 @@ class Style(object):
         return
 
     def load(self, window):
-        texturePath = window.dolphinPath + "/User/Load/Textures/" + GAME_ID
+        texturePath = window.dolphinPath + "/User/Load/Textures/" + GAME_ID + "/"
+        print("Removing" + texturePath)
         try:
-            os.rmdir(texturePath)
+            shutil.rmtree(texturePath)
         except:
-            pass
+            print("Dir doesn't exist")
         shutil.copytree(self.styleDir, texturePath)
 
     def writeCFG(self):
@@ -101,7 +101,7 @@ class Style(object):
                 alg = Algorithms.Conv_NN
             else:
                 alg = Algorithms.Cycle_GAN
-            styleDir = path + "/" + lines[3].strip()
+            styleDir = lines[3].strip()
         styleImage = path + "/style.jpg"
         if (os.path.exists(path + "/preview.jpg")):
             previewImage = path + "/preview.jpg"
