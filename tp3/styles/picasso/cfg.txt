@@ -1,0 +1,4 @@
+Picasso
+Picasso Painting
+Algorithms.Conv_NN
+../styles/picasso

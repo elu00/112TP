@@ -1,0 +1,4 @@
+Sketch
+Black and White Sketch
+Algorithms.Conv_NN
+../styles/sketch
