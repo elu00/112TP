@@ -1,4 +1,4 @@
 Sketch
 Black and White Sketch
 Algorithms.Conv_NN
-C:/Users/elu/source/repos/112tp/tp2/styles/sketch
+../styles/sketch

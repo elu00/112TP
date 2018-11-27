@@ -1,4 +1,4 @@
 Picasso
 Picasso Painting
 Algorithms.Conv_NN
-C:/Users/elu/source/repos/112tp/tp2/styles/picasso
+../styles/picasso
