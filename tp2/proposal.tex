@@ -4,6 +4,21 @@
 \title{112 TP1 Design Proposal}
 \author{Ethan Lu, AndrewID: ethanlu}
 \maketitle
+\section{TP2 Update}
+So far, I've accomplished the following:
+\begin{enumerate}
+	\item Added all functionality to the QT interface.
+	\item Added a fully working implementation of the Style Importation wizard. 
+	\item Added working implementations of the Conv\_NN algorithm, which can also be computed through the QT interface
+	\item Added fully functional game launching with modified assets through the interface.
+	\item Added options in the interface to specify the location of the game file and the dolphin installation path.
+	\item Added status updating as necessary for the above two options.
+\end{enumerate}
+The primary difficulty that I've run into has been implementation of the Cycle GAN algorithm. 
+Separately from implementing it in this project, running and training the models in the various demo projects I've seen has required absurd amounts of computing time, requiring 12+ hours to train the models and 30+ minutes to run it on a single image. Furthermore, the results have been particularly bad, so I've decided to drop this algorithm.
+Instead of implementing it, I'll be adding in options to change the image processing resolution and the iteration count for the Conv\_NN algorithm.
+
+Additionally, when running the algorithm, the progress bar doesn't seem to update, even though it does internally. I'm fairly sure this is a limitation of QT, but I'll see if I can get aroung it.
 \section{Project Overview}
 
 \subsection{Project Description}
@@ -73,7 +88,7 @@
 
 \subsection{Timeline Plan}
     \textbf{TP1:} Have user interface/GUI designed and implemented. Seperately, have a working version of the convolutional NN algorithm.\\
-    \textbf{TP2:} Bind the two together, add necessary filesystem manipulations to the GUI. Implement the cycle GAN algorithm.\\
+    \textbf{TP2:} Bind the two together, add necessary filesystem manipulations to the GUI.\\ 
     \textbf{TP3:} Add synthetic benchmarking and related graph/statistic visualization.\\
 \subsection{Version Control Plan}
     I'll be using GitHub to backup/version control my code. 
@@ -85,8 +100,6 @@
 	\item PyQT for QT bindings/User Interface.
 	\item Built-in Python packages (os, subprocess) for file manipulations.
 \end{enumerate}
-\subsection{TP2 Update}
-	So far, I haven't needed to make any significant changes to my design plans.
 \section{Storyboard}
 See storyboard.png
 \begin{enumerate}[(1)]
