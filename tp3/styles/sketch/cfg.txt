@@ -1,4 +1,4 @@
 Sketch
 Black and White Sketch
-Algorithms.Conv_NN
+CONV_NN; 500 iterations; 128 processing resolution
 ../styles/sketch

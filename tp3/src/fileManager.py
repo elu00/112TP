@@ -10,19 +10,28 @@ import torchvision.transforms as transforms
 
 import alg
 
-IMAGE_PROCESSING_RESOLUTION = 128
 GAME_ID = "G8M"
 
 #################################
 # Folder Processing
 ##################################
-# TODO: NEW ALGORITHM PROCESSING
-# BENCHMARKING WITH MATPLOTLIB
+# TODO: BENCHMARKING WITH MATPLOTLIB
 class Algorithms(object):
-    def __init__():
-        return
-    def __repr__():
-        return "CONV_NN"
+    def __init__(self, iterations = 500, resolution = 128):
+        self.iterations = iterations
+        self.resolution = resolution
+    def __repr__(self):
+        return "CONV_NN; %d iterations; %d processing resolution" \
+            % (self.iterations, self.resolution)
+    @staticmethod
+    def fromStr(s):
+        iterString = s.split(";")[1]
+        resString = s.split(";")[2]
+        # Cutting the string to remove the "iterations" and 
+        # "processing resolution" bits
+        iterations = int(iterString[1:-10])
+        resolution = int(resString[1:-23])
+        return Algorithms(iterations, resolution)
 
 class Style(object):
     def __init__(self, name, descr, styleImage, alg, computed,
@@ -52,27 +61,57 @@ class Style(object):
         Computed: %s      \n
         Images: %s        \n
         Folder: %s        \n
-        ''' % (self.name, self.descr, self.alg, self.computed,
+        ''' % (self.name, self.descr, str(self.alg), self.computed,
                                      self.imgCount, self.styleDir)
 
+    #################################
+    # Computational Wrapper Functions
+    ##################################
     def compute(self, window):
         window.progressBar.setMinimum(0)
         window.progressBar.setMaximum(self.imgCount)
         # Precompute style tensor
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        styleTensor = loadImage(self.styleImage, device)[0]
+        styleTensor = self.loadImage(self.styleImage, device)[0]
         # Process each image
         for i in range(self.imgCount):
             imgPath = self.imgList[i]
             # Manipulations to make the path correct
             outputPath = self.styleDir + "/" + imgPath[5:-3] + "png"
-            processImage(imgPath, styleTensor, outputPath, device)
+            self.processImage(imgPath, styleTensor, outputPath, device)
             window.progressBar.setValue(i + 1)
         self.writeCFG()
         self.computed = True
         window.updateStatus()
         return
 
+
+    def loadImage(self, imgPath, device):
+        img = Image.open(imgPath)
+        # Storing the alpha channel for future use
+        try:
+            alphaIMG = img.getchannel('A')
+        except:
+            alphaIMG = None
+        origDim = img.size
+        size = [self.alg.resolution, self.alg.resolution]
+        img = img.resize(size).convert("RGB")
+        img = transforms.ToTensor()(img).unsqueeze(0)
+        return (img.to(alg.device, torch.float), origDim, alphaIMG)
+
+    def processImage(self, imgPath, styleTensor, outputPath, device):
+        contentImg, origDim, alphaIMG = self.loadImage(imgPath, device)
+        inputImg = contentImg.clone()
+        output = alg.run_style_transfer(contentImg, styleTensor, inputImg, self.alg.iterations)
+        # Process the output image
+        output = output.cpu().clone().detach().squeeze(0)
+        output = transforms.ToPILImage()(output)
+        output = output.resize(origDim)
+        if alphaIMG != None:
+            output.putalpha(alphaIMG)
+        output.save(outputPath, optimize = True, quality = 60)
+        print("Style transferred!")
+    
     def load(self, window):
         texturePath = window.dolphinPath + "/User/Load/Textures/" + GAME_ID + "/"
         print("Removing" + texturePath)
@@ -101,10 +140,7 @@ class Style(object):
             lines = list(f)
             name = lines[0].strip()
             descr = lines[1].strip()
-            if lines[2] == "Algorithms.Conv_NN":
-                alg = Algorithms.Conv_NN
-            else:
-                alg = Algorithms.Cycle_GAN
+            alg = Algorithms.fromStr(lines[2])
             styleDir = lines[3].strip()
         styleImage = path + "/style.jpg"
         if (os.path.exists(path + "/preview.jpg")):
@@ -115,22 +151,6 @@ class Style(object):
                     styleImage = styleImage, computed = True, previewImage = previewImage)
 
 
-  
-#################################
-# Computational Wrapper Functions
-##################################
-def loadImage(imgPath, device):
-    img = Image.open(imgPath)
-    # Storing the alpha channel for future use
-    try:
-        alphaIMG = img.getchannel('A')
-    except:
-        alphaIMG = None
-    origDim = img.size
-    size = [IMAGE_PROCESSING_RESOLUTION, IMAGE_PROCESSING_RESOLUTION]
-    img = img.resize(size).convert("RGB")
-    img = transforms.ToTensor()(img).unsqueeze(0)
-    return (img.to(alg.device, torch.float), origDim, alphaIMG)
 
 class ImageThread(QThread):
     def __init__(self, style, window):
@@ -138,27 +158,10 @@ class ImageThread(QThread):
         self.style = style
         self.window = window
 
-    def __del__(self):
-        self.wait()
-
     def run(self):
         self.style.compute(self.window)
         return
 
-
-
-def processImage(imgPath, styleImg, outputPath, device):
-    contentImg, origDim, alphaIMG = loadImage(imgPath, device)
-    inputImg = contentImg.clone()
-    output = alg.run_style_transfer(contentImg, styleImg, inputImg)
-    # Process the output image
-    output = output.cpu().clone().detach().squeeze(0)
-    output = transforms.ToPILImage()(output)
-    output = output.resize(origDim)
-    if alphaIMG != None:
-        output.putalpha(alphaIMG)
-    output.save(outputPath, optimize = True, quality = 60)
-    print("Style transferred!")
 
 
 #############################

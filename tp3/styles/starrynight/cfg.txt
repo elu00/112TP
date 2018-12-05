@@ -1,4 +1,4 @@
 Starry Night
 Van Gogh's Starry Night
-Algorithms.Conv_NN
+CONV_NN; 500 iterations; 128 processing resolution
 ../styles/starrynight
