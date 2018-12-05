@@ -16,10 +16,13 @@ GAME_ID = "G8M"
 #################################
 # Folder Processing
 ##################################
-
-class Algorithms(enum.Enum):
-    Conv_NN = 0
-    Cycle_GAN = 1
+# TODO: NEW ALGORITHM PROCESSING
+# BENCHMARKING WITH MATPLOTLIB
+class Algorithms(object):
+    def __init__():
+        return
+    def __repr__():
+        return "CONV_NN"
 
 class Style(object):
     def __init__(self, name, descr, styleImage, alg, computed,
@@ -54,7 +57,7 @@ class Style(object):
 
     def compute(self, window):
         window.progressBar.setMinimum(0)
-        window.progressBar.setMaximum(self.imgCount - 1)
+        window.progressBar.setMaximum(self.imgCount)
         # Precompute style tensor
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         styleTensor = loadImage(self.styleImage, device)[0]
@@ -64,7 +67,7 @@ class Style(object):
             # Manipulations to make the path correct
             outputPath = self.styleDir + "/" + imgPath[5:-3] + "png"
             processImage(imgPath, styleTensor, outputPath, device)
-            window.progressBar.setValue(i)
+            window.progressBar.setValue(i + 1)
         self.writeCFG()
         self.computed = True
         window.updateStatus()
@@ -130,14 +133,18 @@ def loadImage(imgPath, device):
     return (img.to(alg.device, torch.float), origDim, alphaIMG)
 
 class ImageThread(QThread):
-
-    def __init__(self):
-        super().__init__(self)
+    def __init__(self, style, window):
+        super().__init__()
+        self.style = style
+        self.window = window
 
     def __del__(self):
         self.wait()
 
     def run(self):
+        self.style.compute(self.window)
+        return
+
 
 
 def processImage(imgPath, styleImg, outputPath, device):

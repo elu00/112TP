@@ -4,7 +4,7 @@ from PyQt5.QtGui import QIcon, QPixmap
 import sys
 import alg
 import fileManager
-from fileManager import Algorithms, Style
+from fileManager import Algorithms, Style, ImageThread
 import os
 import enum
 import subprocess
@@ -12,7 +12,6 @@ import subprocess
 PATH_TO_DOLPHIN = "Dolphin.exe"
 PATH_TO_GAME = ""
 PATH_TO_TEXTURES = ""
-WINDOW_DIMENSIONS = (600,600)
 
 class StyleLoader(QDialog):
     def __init__(self, parent = None):
@@ -135,7 +134,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("StyleDev")
-        folders = ["../styles/starrynight"]#, "../styles/sketch", "../styles/picasso"]
+        folders = ["../styles/starrynight", "../styles/sketch", "../styles/picasso"]
         self.styles = [Style.styleFromFolder(folder) for folder in folders]
         self.initUI()
 
@@ -186,6 +185,7 @@ class MainWindow(QWidget):
         # Compute Button
         self.computeButton = QPushButton("Calculate Style")
         self.computeButton.clicked.connect(self.computeActiveStyle)
+        self.computeThread = None
         layoutGrid.addWidget(self.computeButton, 5, 1)
 
         # Launch Button
@@ -219,7 +219,22 @@ class MainWindow(QWidget):
         self.updateStatus()
 
     def computeActiveStyle(self):
-        self.curStyle.compute(self)
+        if self.computeThread == None:
+            style = self.curStyle
+            self.computeButton.setText("Cancel Calculation")
+            self.computeThread = ImageThread(style, self)
+            self.computeThread.finished.connect(self.done)
+            self.computeThread.start()
+        else:
+            self.updateStatus()
+            self.computeThread.terminate()
+            self.computeThread = None
+
+
+    def done(self):
+        self.thread = None
+        self.updateStatus()
+        return
 
     def updateISO(self):
         fileTypes = "GameCube Files (*.iso *.wbfs)"
