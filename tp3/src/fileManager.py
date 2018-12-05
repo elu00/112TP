@@ -3,6 +3,7 @@ import shutil
 import enum
 
 from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtCore import QThread
 from PIL import Image
 import torch
 import torchvision.transforms as transforms
@@ -127,6 +128,17 @@ def loadImage(imgPath, device):
     img = img.resize(size).convert("RGB")
     img = transforms.ToTensor()(img).unsqueeze(0)
     return (img.to(alg.device, torch.float), origDim, alphaIMG)
+
+class ImageThread(QThread):
+
+    def __init__(self):
+        super().__init__(self)
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+
 
 def processImage(imgPath, styleImg, outputPath, device):
     contentImg, origDim, alphaIMG = loadImage(imgPath, device)
