@@ -56,7 +56,7 @@ class StyleLoader(QDialog):
         # Select algorithm parameters
         algWrapper = QGridLayout()
         self.iterLabel = QLabel("Iterations: ")
-        self.iterSelect = genSlider(100, 5)
+        self.iterSelect = genSlider(5)
         self.iterSelect.setOrientation(Qt.Horizontal)
         self.iterSelect.sliderMoved.connect(self.updateIter)
         self.updateIter(1)
@@ -64,7 +64,7 @@ class StyleLoader(QDialog):
         algWrapper.addWidget(self.iterSelect, 0, 2)
 
         self.resLabel = QLabel("Resolution: ")
-        self.resSelect = genSlider(128, 6)
+        self.resSelect = genSlider(6)
         self.resSelect.sliderMoved.connect(self.updateRes)
         self.updateRes(1)
         algWrapper.addWidget(self.resLabel, 1, 0)
@@ -287,7 +287,7 @@ class MainWindow(QWidget):
         self.curStyle.load(self)
         subprocess.run([self.dolphinPath + "/Dolphin.exe", "-e", self.isoPath])
 
-def genSlider(step, number):
+def genSlider(number):
     slider = QSlider()
     slider.setOrientation(Qt.Horizontal)
     slider.setRange(1, number)

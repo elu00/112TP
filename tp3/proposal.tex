@@ -4,6 +4,13 @@
 \title{112 TP1 Design Proposal}
 \author{Ethan Lu, AndrewID: ethanlu}
 \maketitle
+\section{TP3 Update:}
+Since TP3, I've added the following:
+\begin{enumerate}
+	\item Made the style calculations non-blocking through the use of threading. In particular, the progress bar will now update while doing calculations, and the UI won't show a "not responding" prompt during the calculations.
+	\item Added paramter tuning to the style importation wizard. In particular, the image process resolution and iteration count can be adjusted at runtime.
+	\item Implemented the benchmarking interface (which is contained in bench.py). By dynamically adjusting step size/number of steps for comparison in the benchmarking, users can generate a dynamic graph that relates runtime of the calculations on a single image to the number of iterations it's processed for. This was done through the library pyqtplot.
+\end{enumerate}
 \section{TP2 Update}
 So far, I've accomplished the following:
 \begin{enumerate}

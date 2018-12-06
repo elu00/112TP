@@ -1,85 +1,16 @@
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtCore import Qt
+import pyqtgraph as pg
 
 import sys
+import time
 import alg
 import fileManager
-from fileManager import Algorithms, Style, ImageThread
+from fileManager import Algorithms, Style, BenchThread
 import os
 
 
-# A QT Dialog for importing in new styles
-class StyleLoader(QDialog):
-    def __init__(self, parent = None):
-        super().__init__(parent)
-        self.initUI()
-
-
-    def initUI(self):
-        layout = QVBoxLayout(self)
-
-        
-
-
-
-        # Select the style directory
-        dirWrapper = QHBoxLayout()
-        self.dirSelect = QPushButton("Select the output/style directory")
-        self.dirSelect.clicked.connect(self.updateStyleDir)
-        self.dirPath = QLabel()
-        self.styleDir = ""
-        dirWrapper.addWidget(self.dirSelect)
-        dirWrapper.addWidget(self.dirPath)
-        layout.addLayout(dirWrapper)
-
-
-        # Confirmation Buttons
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        buttons.button(QDialogButtonBox.Ok).setEnabled(False)
-        layout.addWidget(buttons)
-        self.buttons = buttons
-
-
-
-
-    def updateIter(self, value):
-        self.iterations = value * 100
-        self.iterLabel.setText("Iterations: %d" % self.iterations)
-
-    def updateRes(self, value):
-        self.resolution = value * 128
-        self.resLabel.setText("Resolution: %d" % self.resolution)
-
-    def updateStyleDir(self):
-        self.styleDir = QFileDialog.getExistingDirectory(self, 
-                        "Choose a folder", "../styles")
-        self.dirPath.setText(self.styleDir)
-        self.checkCompleteness()
-
-    def checkCompleteness(self):
-        if self.styleImage != "" and self.styleDir != "":
-            self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)
-        else:
-            self.buttons.button(QDialogButtonBox.Ok).setEnabled(False)
-    
-    def getStyle(self):
-        return Style(name = self.name, descr = self.descr, 
-                        styleImage = self.styleImage, 
-                        alg = Algorithms(self.iterations, self.resolution),
-                        computed = False, styleDir = self.styleDir)
-    
-    @staticmethod
-    def getNewStyle(parent = None):
-        dialog = StyleLoader(parent)
-        result = dialog.exec_()
-        if result == QDialog.Accepted:
-            return dialog.getStyle()
-        else:
-            return None
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -91,125 +22,141 @@ class MainWindow(QWidget):
         layoutGrid = QGridLayout(self)
         self.setLayout(layoutGrid)
 
-        # Initialize UI Elements, then populate them with updateStyle()
+        # Initialize UI Elements
         # Main Preview Image
-        self.img = QLabel()
-        layoutGrid.addWidget(self.img, 0, 0, 5, 1)
-        # Select algorithm parameters
+        dataGraph = pg.PlotWidget(title = "Benchmark Results")
+        self.dataPlot = dataGraph.getPlotItem()
+        self.dataPlot.setLabel('left', "Computation Time", units='s')
+        self.dataPlot.setLabel('bottom', "Iterations")
+        layoutGrid.addWidget(dataGraph, 0, 0, 6, 1)
+
+        # Style Image Selection
+        styleWrapper = QHBoxLayout()
+        self.styleSelect = QPushButton("Select the style image")
+        self.styleSelect.clicked.connect(self.updateStyleImage)
+        self.styleLabel = QLabel()
+        self.stylePath = ""
+        styleWrapper.addWidget(self.styleSelect)
+        styleWrapper.addWidget(self.styleLabel)
+        layoutGrid.addLayout(styleWrapper, 1, 1)
+
+        # Content Image Selection
+        contentWrapper = QHBoxLayout()
+        self.contentSelect = QPushButton("Select the content image")
+        self.contentSelect.clicked.connect(self.updateContentImage)
+        self.contentLabel = QLabel()
+        self.contentPath = ""
+        contentWrapper.addWidget(self.contentSelect)
+        contentWrapper.addWidget(self.contentLabel)
+        layoutGrid.addLayout(contentWrapper, 2, 1)
+
+        # Parameter adjustment
         algWrapper = QGridLayout()
-        self.iterLabel = QLabel("Iterations: ")
-        self.iterSelect = genSlider(100, 5)
+        self.iterLabel = QLabel("Iteration Step Size: ")
+        self.iterSelect = genSlider(10)
         self.iterSelect.setOrientation(Qt.Horizontal)
         self.iterSelect.sliderMoved.connect(self.updateIter)
         self.updateIter(1)
         algWrapper.addWidget(self.iterLabel, 0, 0)
         algWrapper.addWidget(self.iterSelect, 0, 2)
 
-        self.resLabel = QLabel("Resolution: ")
-        self.resSelect = genSlider(128, 6)
-        self.resSelect.sliderMoved.connect(self.updateRes)
-        self.updateRes(1)
-        algWrapper.addWidget(self.resLabel, 1, 0)
-        algWrapper.addWidget(self.resSelect, 1, 2)
-        layout.addLayout(algWrapper)
+        self.stepLabel = QLabel("Step Count:")
+        self.stepSelect = genSlider(10)
+        self.stepSelect.sliderMoved.connect(self.updateSteps)
+        self.updateSteps(1)
+        algWrapper.addWidget(self.stepLabel, 1, 0)
+        algWrapper.addWidget(self.stepSelect, 1, 2)
+        layoutGrid.addLayout(algWrapper, 3, 1)
 
-        # Style Image Selection
-        imgWrapper = QHBoxLayout()
-        self.imgSelect = QPushButton("Select the style image")
-        self.imgSelect.clicked.connect(self.updateImage)
-        self.imgPath = QLabel()
-        self.styleImage = ""
-        imgWrapper.addWidget(self.imgSelect)
-        imgWrapper.addWidget(self.imgPath)
-        layout.addLayout(imgWrapper)
 
-        # If necessary, progress bar
+        # Progress bar
         self.progressBar = QProgressBar()
         self.progressBar.setMinimum(0)
-        self.progressBar.setMaximum(100)
-        layoutGrid.addWidget(self.progressBar, 6, 0)
+        layoutGrid.addWidget(self.progressBar, 7, 0)
 
-        # Style Selection Menu 
-        self.styleMenu = QComboBox()
-        self.populateStyles()
-        self.styleMenu.currentIndexChanged.connect(self.updateStyle)
-        layoutGrid.addWidget(self.styleMenu, 0, 1)
-
-        # Info Box
-        self.info = QLabel()
-        layoutGrid.addWidget(self.info, 0, 1)   
-
-
-        # Import New Style
-        self.importButton = QPushButton("Import New Style...")
-        self.importButton.clicked.connect(self.importStyle)
-        layoutGrid.addWidget(self.importButton, 4, 1)
 
         # Compute Button
-        self.computeButton = QPushButton("Calculate Style")
-        self.computeButton.clicked.connect(self.computeActiveStyle)
+        self.benchButton = QPushButton("Benchmark!")
+        self.benchButton.clicked.connect(self.startBench)
+        self.benchButton.setEnabled(False)
         self.computeThread = None
-        layoutGrid.addWidget(self.computeButton, 5, 1)
-
-        # Launch Button
-        self.launchButton = QPushButton("Start Game!")
-        self.launchButton.clicked.connect(self.startGame)
-        layoutGrid.addWidget(self.launchButton, 6, 1)
-    
-
-        # Populate the interface
-        self.curStyle = self.styles[0]
-        self.updateStatus()
-        self.updateStyle(0)
+        layoutGrid.addWidget(self.benchButton, 5, 1)
     
         # Show the window 
         self.show()
 
     
     def startBench(self):
-        if self.computeThread == None:
-            style = self.curStyle
-            self.computeButton.setText("Cancel Calculation")
-            self.computeThread = ImageThread(style, self)
-            self.computeThread.finished.connect(self.done)
+        self.alg = Algorithms(0, 512)
+        style = Style("Bench", "Bench", self.stylePath, self.alg, False, "")
+        try:
+            os.mkdir("temp")
+        except:
+            pass
+        self.disableAll()
+        self.curStep = 0
+        self.lastTime = None
+        self.data = ([], [])
+        self.progressBar.setMaximum(self.steps * self.iterations)
+        self.computeThread = BenchThread(style, self)
+        self.computeThread.finished.connect(self.calcNextStep)
+        self.calcNextStep()
+
+    def calcNextStep(self):
+        # Process/graph the new data
+        if self.lastTime != None:
+            timeElapsed = time.time() - self.lastTime
+            (x, y) = (self.alg.iterations, timeElapsed)
+            self.dataPlot.plot([x], [y], pen=(200,200,200), 
+                        symbolBrush=(64,181,246), symbolPen='w')
+            self.data[0].append(x)
+            self.data[1].append(y)
+        self.progressBar.setValue(self.alg.iterations)
+        # Recursively run the next step
+        if self.alg.iterations < self.steps * self.iterations:
+            self.alg.iterations += self.iterations
+            self.lastTime = time.time()
             self.computeThread.start()
         else:
-            self.updateStatus()
-            self.progressBar.setValue(0)
-            self.computeThread.terminate()
-            self.computeThread = None
+            # All the iterations have finished, so we can display all the data.
+            self.dataPlot.plot(self.data[0], self.data[1], pen=(200,200,200), 
+                        symbolBrush=(64,181,246), symbolPen='w')
+            
 
-    def done(self):
-        self.thread = None
-        self.updateStatus()
-        return
-    def updateImage(self):
+    def updateStyleImage(self):
         fileTypes = "Images (*.jpg *.png)"
-        self.styleImage = QFileDialog.getOpenFileName(self, 
+        self.stylePath = QFileDialog.getOpenFileName(self, 
                         "Choose an Image", "../styles", fileTypes)[0]
-        self.imgPath.setText(self.styleImage)
+        self.styleLabel.setText(self.stylePath.split("/")[-1])
         self.checkCompleteness()
 
-    def updateStatus(self):
-        computed = self.curStyle.computed
-        if computed and self.isoPath != "" and self.dolphinPath != "":
-            self.launchButton.setText("Start Game!")
-            self.launchButton.setEnabled(True)
-        else:
-            self.launchButton.setText("Need paths set or style to be computed")
-            self.launchButton.setEnabled(False)
-        # Compute Button Stuff
-        if computed:
-            self.progressBar.hide()
-            self.computeButton.setEnabled(False)
-            self.computeButton.setText("Style Already Computed!")
-        else:
-            self.progressBar.show()
-            self.progressBar.setValue(0)
-            self.computeButton.setEnabled(True)
-            self.computeButton.setText("Calculate Style")
+    def updateContentImage(self):
+        fileTypes = "Images (*.jpg *.png)"
+        self.contentPath = QFileDialog.getOpenFileName(self, 
+                        "Choose an Image", "../styles", fileTypes)[0]
+        self.contentLabel.setText(self.contentPath.split("/")[-1])
+        self.checkCompleteness()
+    
+    def updateIter(self, value):
+        self.iterations = value * 100
+        self.iterLabel.setText("Iteration Step Size: %d" % self.iterations)
 
-def genSlider(step, number):
+    def updateSteps(self, value):
+        self.steps = value
+        self.stepLabel.setText("Step Count: %d" % self.steps)
+
+    def disableAll(self):
+        self.benchButton.setEnabled(False)
+        self.styleSelect.setEnabled(False)
+        self.contentSelect.setEnabled(False)
+
+    def checkCompleteness(self):
+        if self.stylePath != "" and self.contentPath != "":
+            self.benchButton.setEnabled(True)
+
+
+
+def genSlider(number):
     slider = QSlider()
     slider.setOrientation(Qt.Horizontal)
     slider.setRange(1, number)

@@ -15,7 +15,6 @@ GAME_ID = "G8M"
 #################################
 # Folder Processing
 ##################################
-# TODO: BENCHMARKING WITH MATPLOTLIB
 class Algorithms(object):
     def __init__(self, iterations = 500, resolution = 128):
         self.iterations = iterations
@@ -84,7 +83,13 @@ class Style(object):
         self.computed = True
         window.updateStatus()
         return
-
+    def bench(self, imgPath):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        styleTensor = self.loadImage(self.styleImage, device)[0]
+        # Manipulations to make the path correct
+        outputPath = imgPath[:-3] + "transfer" + str(self.alg.iterations) + ".png"
+        self.processImage(imgPath, styleTensor, outputPath, device)
+        return
 
     def loadImage(self, imgPath, device):
         img = Image.open(imgPath)
@@ -162,7 +167,15 @@ class ImageThread(QThread):
         self.style.compute(self.window)
         return
 
+class BenchThread(QThread):
+    def __init__(self, style, window):
+        super().__init__()
+        self.style = style
+        self.window = window
 
+    def run(self):
+        self.style.bench(self.window.contentPath)
+        return
 
 #############################
 # Computed Dataset functions
