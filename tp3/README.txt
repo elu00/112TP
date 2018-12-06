@@ -1,19 +1,19 @@
 ABOUT:
 This project contains a copy of styledev.rt, a QT-based GUI that provides a useful and fluid framework for
 performing style transfer in real time through modification of game assets and
-textures.
-
-
+textures. A variety of utilities are provided, including pre-computed styles, an importation wizard to calculate new styles from an image, and a benchmarking suite. 
 
 USAGE:
 To run the main application interface, run the following commands in your terminal of choice:
 > cd /src/
 > python app.py 
+NOTE: Prior to running the game, the active style must be computed, a valid dolphin directory must be specified (typically just /dolphin), and a game ISO must be provided (as is reflected in the interface)
+
 
 To run the benchmarking software, run the following commands in your terminal of choice:
 > cd /src/
 > python bench.py
-
+NOTE: a style and content image must be selected prior to running the benchmark (as is reflected in the interface)
 
 
 DEPENDENCIES:
@@ -30,7 +30,7 @@ This project requries the following to be installed/present:
 If anaconda is installed on the system, all of the necessary python libraries can be installed by running /src/install.bat
 
 VIDEO LINK:
-
+https://youtu.be/Tiw38EDxgpc
 
 LIMITATIONS OF THE AUTOLAB COPY:
 Just to ensure compatibility/minimizing the likelihood of crashes, a couple of things to note about this zip:
