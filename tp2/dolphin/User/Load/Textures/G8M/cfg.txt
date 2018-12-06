@@ -1,4 +1,0 @@
-Starry Night
-Van Gogh's Starry Night
-Algorithms.Conv_NN
-../styles/starrynight
