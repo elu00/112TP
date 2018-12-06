@@ -1,3 +1,9 @@
+################################################################################
+# fileManager.py:
+# This file contains the Style and Algorithms classes for use in the other 
+# parts of the application.
+# A variety of other computational functions are provided as well.
+################################################################################
 import os
 import shutil
 import enum
@@ -12,9 +18,11 @@ import alg
 
 GAME_ID = "G8M"
 
-#################################
+######################################
 # Folder Processing
-##################################
+######################################
+
+# Base class for passing algorithm parameters around
 class Algorithms(object):
     def __init__(self, iterations = 500, resolution = 128):
         self.iterations = iterations
@@ -22,6 +30,7 @@ class Algorithms(object):
     def __repr__(self):
         return "CONV_NN; %d iterations; %d processing resolution" \
             % (self.iterations, self.resolution)
+    # Derive a new Algorithms object from it's string representation
     @staticmethod
     def fromStr(s):
         iterString = s.split(";")[1]
@@ -32,6 +41,7 @@ class Algorithms(object):
         resolution = int(resString[1:-23])
         return Algorithms(iterations, resolution)
 
+# The class that specifies a style, complete with computational functions
 class Style(object):
     def __init__(self, name, descr, styleImage, alg, computed,
                     styleDir, previewImage = None):
@@ -41,16 +51,18 @@ class Style(object):
         self.styleImage = styleImage
         self.styleDir = styleDir
         self.icon = QIcon(styleImage)
+        # All the images to process should be in /dump/
         tempList = list(os.listdir("dump"))
         self.imgCount = len(tempList)
         self.imgList = ["dump/" + tempList[i] for i in range(self.imgCount)]
+        # Handle the preview image PixMap
         if previewImage != None and os.path.exists(previewImage):
             self.displayImage = QPixmap(previewImage).scaledToWidth(600)
         else:
             self.displayImage = QPixmap(styleImage).scaledToWidth(600)
         self.computed = computed
 
-
+    # String characterization of the Style
     def __repr__(self):
         return \
         '''
@@ -66,6 +78,7 @@ class Style(object):
     #################################
     # Computational Wrapper Functions
     ##################################
+    # Compute the entire style
     def compute(self, window):
         window.progressBar.setMinimum(0)
         window.progressBar.setMaximum(self.imgCount)
@@ -83,6 +96,8 @@ class Style(object):
         self.computed = True
         window.updateStatus()
         return
+
+    # Compute a single image for benchmarking purposes
     def bench(self, imgPath):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         styleTensor = self.loadImage(self.styleImage, device)[0]
@@ -91,19 +106,23 @@ class Style(object):
         self.processImage(imgPath, styleTensor, outputPath, device)
         return
 
+    # Loads an image into the PyTorch library
     def loadImage(self, imgPath, device):
         img = Image.open(imgPath)
-        # Storing the alpha channel for future use
+        # Storing the alpha channel and original resolution of the image
+        # to be able to restore it later
         try:
             alphaIMG = img.getchannel('A')
         except:
             alphaIMG = None
         origDim = img.size
+        # resize it for processing
         size = [self.alg.resolution, self.alg.resolution]
         img = img.resize(size).convert("RGB")
         img = transforms.ToTensor()(img).unsqueeze(0)
         return (img.to(alg.device, torch.float), origDim, alphaIMG)
 
+    # Process/style transfer a single image against a style tensor
     def processImage(self, imgPath, styleTensor, outputPath, device):
         contentImg, origDim, alphaIMG = self.loadImage(imgPath, device)
         inputImg = contentImg.clone()
@@ -116,16 +135,8 @@ class Style(object):
             output.putalpha(alphaIMG)
         output.save(outputPath, optimize = True, quality = 60)
         print("Style transferred!")
-    
-    def load(self, window):
-        texturePath = window.dolphinPath + "/User/Load/Textures/" + GAME_ID + "/"
-        print("Removing" + texturePath)
-        try:
-            shutil.rmtree(texturePath)
-        except:
-            print("Dir doesn't exist")
-        shutil.copytree(self.styleDir, texturePath)
 
+    # Write the configuration of a style to disk, and copy over the style image
     def writeCFG(self):
         path = self.styleDir
         contents = "\n".join([self.name, self.descr, str(self.alg), path])
@@ -136,7 +147,8 @@ class Style(object):
             f.writelines(contents)
         shutil.copyfile(self.styleImage, path + "/style.jpg")
         return    
-
+    
+    # Read in a folder to a style using the configuration text file 
     @staticmethod
     def styleFromFolder(path):
         print("Loading Style from:" + path)
@@ -155,8 +167,17 @@ class Style(object):
         return Style(name = name, descr = descr, alg = alg, styleDir = styleDir,
                     styleImage = styleImage, computed = True, previewImage = previewImage)
 
+    # Load in modified textures into the Dolphin Path 
+    def load(self, window):
+        texturePath = window.dolphinPath + "/User/Load/Textures/" + GAME_ID + "/"
+        print("Removing", texturePath)
+        try:
+            shutil.rmtree(texturePath)
+        except:
+            print("Dir doesn't exist")
+        shutil.copytree(self.styleDir, texturePath)
 
-
+# Separate thread for Image Processing
 class ImageThread(QThread):
     def __init__(self, style, window):
         super().__init__()
@@ -167,6 +188,7 @@ class ImageThread(QThread):
         self.style.compute(self.window)
         return
 
+# Separate thread for Image Processing
 class BenchThread(QThread):
     def __init__(self, style, window):
         super().__init__()
@@ -176,15 +198,5 @@ class BenchThread(QThread):
     def run(self):
         self.style.bench(self.window.contentPath)
         return
-
-#############################
-# Computed Dataset functions
-#############################
-def loadFolder(folder, destination, newName):
-    assert(os.path.exists(folder) and os.path.exists(destination)), \
-    "Invalid folder/directory"
-    shutil.copytree(folder, destination + folder)
-    os.rename(destination + folder, newName)
-
 
 

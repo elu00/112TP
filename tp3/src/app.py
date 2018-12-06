@@ -1,10 +1,13 @@
+################################################################################
+# app.py:
+# This file handles the user interface and databinding for the application. 
+################################################################################
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt
 
 import sys
 import alg
-import fileManager
 from fileManager import Algorithms, Style, ImageThread
 import os
 import subprocess
@@ -15,7 +18,7 @@ class StyleLoader(QDialog):
         super().__init__(parent)
         self.initUI()
 
-
+    # Initialize the UI and various paramters
     def initUI(self):
         layout = QVBoxLayout(self)
 
@@ -91,7 +94,7 @@ class StyleLoader(QDialog):
         layout.addWidget(buttons)
         self.buttons = buttons
 
-
+    # Pop up a file selection dialog
     def updateImage(self):
         fileTypes = "Images (*.jpg *.png)"
         self.styleImage = QFileDialog.getOpenFileName(self, 
@@ -99,12 +102,14 @@ class StyleLoader(QDialog):
         self.imgPath.setText(self.styleImage)
         self.checkCompleteness()
 
+    # Grab text entry fields
     def updateName(self):
         self.name = self.nameEdit.text()
 
     def updateDescr(self):
         self.descr = self.descrEdit.text()
 
+    # Grab the parameters from a slider
     def updateIter(self, value):
         self.iterations = value * 100
         self.iterLabel.setText("Iterations: %d" % self.iterations)
@@ -113,18 +118,21 @@ class StyleLoader(QDialog):
         self.resolution = value * 128
         self.resLabel.setText("Resolution: %d" % self.resolution)
 
+    # Grab an output directory
     def updateStyleDir(self):
         self.styleDir = QFileDialog.getExistingDirectory(self, 
                         "Choose a folder", "../styles")
         self.dirPath.setText(self.styleDir)
         self.checkCompleteness()
 
+    # Make sure all the required fields are filled in
     def checkCompleteness(self):
         if self.styleImage != "" and self.styleDir != "":
             self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)
         else:
             self.buttons.button(QDialogButtonBox.Ok).setEnabled(False)
     
+    # Return a new style object with the members of the class
     def getStyle(self):
         return Style(name = self.name, descr = self.descr, 
                         styleImage = self.styleImage, 
@@ -211,13 +219,14 @@ class MainWindow(QWidget):
         # Show the window 
         self.show()
 
+    # Populate the style dropdown
     def populateStyles(self):
         self.styleMenu.clear()
         for style in self.styles:
             self.styleMenu.addItem(style.icon, style.name)
         return
 
-
+    # Change the style currently being displayed
     def updateStyle(self, value):
         # Update the preview image
         style = self.styles[value]
@@ -227,6 +236,7 @@ class MainWindow(QWidget):
         self.curStyle = style
         self.updateStatus()
 
+    # Launch a new thread for computation of the current style
     def computeActiveStyle(self):
         if self.computeThread == None:
             style = self.curStyle
@@ -240,28 +250,33 @@ class MainWindow(QWidget):
             self.computeThread.terminate()
             self.computeThread = None
 
+    # Handle the thread finishing
     def done(self):
         self.thread = None
         self.updateStatus()
         return
 
+    # Retrieve an ISO path with a file dialog
     def updateISO(self):
         fileTypes = "GameCube Files (*.iso *.wbfs)"
         self.isoPath = QFileDialog.getOpenFileName(self, 
                         "Browse to the game", "../", fileTypes)[0]
         self.updateStatus()
 
+    # Retrieve a dolphin directory with a file dialog
     def updateDolphinPath(self):
         self.dolphinPath = QFileDialog.getExistingDirectory(self, 
                         "Choose the Dolphin Directory", "../")
         self.updateStatus()
 
+    # Handle creating a new StyleLoader
     def importStyle(self):
         newStyle = StyleLoader.getNewStyle()
         if newStyle != None:
             self.styles.append(newStyle)
             self.populateStyles()
 
+    # Disables/enables buttons as appropriate
     def updateStatus(self):
         computed = self.curStyle.computed
         if computed and self.isoPath != "" and self.dolphinPath != "":
@@ -281,16 +296,15 @@ class MainWindow(QWidget):
             self.computeButton.setEnabled(True)
             self.computeButton.setText("Calculate Style")
 
-
-
+    # Launch the game with modified assets
     def startGame(self):
         self.curStyle.load(self)
         subprocess.run([self.dolphinPath + "/Dolphin.exe", "-e", self.isoPath])
-
-def genSlider(number):
+# Generate a QSlider with the given number of steps
+def genSlider(steps):
     slider = QSlider()
     slider.setOrientation(Qt.Horizontal)
-    slider.setRange(1, number)
+    slider.setRange(1, steps)
     slider.setSingleStep(1)
     slider.setPageStep(1)
     return slider

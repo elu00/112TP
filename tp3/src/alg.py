@@ -1,3 +1,7 @@
+################################################################################
+# alg.py:
+# This file handles the user interface and databinding for the application. 
+# This is done through implementation of stuff
 #################################################################################
 # All of the functions and classes defined within this file are
 # modified from https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
@@ -7,18 +11,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-
-
 import torchvision.models as models
 
 import copy
 import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# desired size of the output image
-imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu
-
 cnn = models.vgg19(pretrained=True).features.to(device).eval()
 normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
 normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)

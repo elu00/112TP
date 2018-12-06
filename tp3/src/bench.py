@@ -1,3 +1,7 @@
+################################################################################
+# bench.py:
+# This file handles the user interface and databinding for the benchmarking suite.
+################################################################################
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtCore import Qt
@@ -6,7 +10,6 @@ import pyqtgraph as pg
 import sys
 import time
 import alg
-import fileManager
 from fileManager import Algorithms, Style, BenchThread
 import os
 
